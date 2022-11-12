@@ -1,0 +1,40 @@
+version: "3"
+services:
+  mongodb:
+    image: mongo:5.0
+    ports:
+      - "${MONGO_PORT}:${MONGO_PORT}"
+    environment:
+      - MONGO_INITDB_DATABASE=${MONGO_DB}
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
+    volumes:
+      # - ./services/mongodb/init.js:/docker-entrypoint-initdb.d/init.js:ro
+      - ./services/mongodb/data:/data/db
+  lobby:
+    build: ./services/lobby
+    ports: 
+      - "3000:3000"
+    environment:
+      - MONGO_HOSTNAME=mongodb
+      - MONGO_PORT=${MONGO_PORT}
+      - MONGO_DB=${MONGO_DB}
+      - MONGO_USERNAME=${MONGO_USERNAME}
+      - MONGO_PASSWORD=${MONGO_PASSWORD}
+      - GAME_SERVICE_HOSTNAME=game
+      - PORT=3000
+    depends_on:
+      - mongodb
+  game:
+    build: ./services/game
+    ports: 
+      - "3001:3001"
+    environment:
+      - MONGO_HOSTNAME=mongodb
+      - MONGO_PORT=${MONGO_PORT}
+      - MONGO_DB=${MONGO_DB}
+      - MONGO_USERNAME=${MONGO_USERNAME}
+      - MONGO_PASSWORD=${MONGO_PASSWORD}
+      - PORT=3001
+    depends_on:
+      - mongodb

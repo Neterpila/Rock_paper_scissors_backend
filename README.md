@@ -34,34 +34,6 @@ Technologies:
 4. In project directory run `docker-compose up --build`.
 5. You now have everything set up (at least in theory). Try to make a request to one of the services using apps such as Postman (or a browser of your choice
 
-### Requesting backend example:
-POST<br>
-\<domain\>:3000/lobby/create<br>
-*in case you run the backend locally \<domain\> will be 'localhost'*<br>
-<br>
-Headers:<br>
-Content-Type: application/json<br>
-<br>
-Body:
-```json
-{
-    "name": "qwe"
-}
-```
-Response should be:<br>
-200
-```json
-{
-    "name": "qwe",
-    "players": [],
-    "_id": "636f915e2b329b4bcb9ba489",
-    "__v": 0
-}
-```
-
-
-
-
 
 ## How to contribute?
 1. Create a branch for a feature you want to add

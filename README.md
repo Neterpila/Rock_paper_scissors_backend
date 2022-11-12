@@ -88,4 +88,5 @@ https://www.tutorialspoint.com/nodejs/nodejs_express_framework.htm
 WS
 https://www.pubnub.com/blog/nodejs-websocket-programming-examples/
 
-
+Mongoose getting started
+https://mongoosejs.com/docs/

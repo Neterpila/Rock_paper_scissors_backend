@@ -2,7 +2,7 @@
 This repo contains a backend of a university group project for a subject called 'web applications'. The goal is to create an online rock paper scissoes game, where people will be able to play against each other.
 
 Backend consists of several microservices each run in docker using compose. This repo contains all those microservies along with configuration files to run everything.
-> Ideally it would be a better practice to have a separate repo for each service, however for the purposes of the project it is'nt necessary as we won't need to manage versions, implement sophisticated deployment techniques, etc. 
+> Ideally it would be a better practice to have a separate repo for each service, however for the purposes of the project it isn't necessary as we won't need to manage versions, implement sophisticated deployment techniques, etc. 
 
 > One Repo to rule them all, One Repo to find them, One Repo to bring them all and in the docker bind them.
 

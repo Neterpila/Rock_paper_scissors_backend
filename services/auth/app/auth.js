@@ -51,7 +51,7 @@ router.post("/register", async (req, res, next) => {
         await user.save();
 
         // return new user
-        return res.status(201).send(_.omit(user, ["password"]));
+        return res.status(201).send(_.omit(user.toObject(), ["password"]));
     } catch (err) {
         console.error("register\n" + err.message || err);
         next(err);
@@ -80,7 +80,7 @@ router.post("/login", async (req, res, next) => {
         user.token = token;
         await user.save();
 
-        return res.status(200).send(_.omit(user, ["password"]));
+        return res.status(200).send(_.omit(user.toObject(), ["password"]));
     } catch (err) {
         console.error("login\n" + err.message || err);
         next(err);

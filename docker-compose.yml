@@ -11,6 +11,23 @@ services:
     volumes:
       # - ./services/mongodb/init.js:/docker-entrypoint-initdb.d/init.js:ro
       - ./services/mongodb/data:/data/db
+
+  auth:
+    build: ./services/auth
+    ports: 
+      - "3002:3002"
+    environment:
+      - MONGO_HOSTNAME=mongodb
+      - MONGO_PORT=${MONGO_PORT}
+      - MONGO_DB=${MONGO_DB}
+      - MONGO_USERNAME=${MONGO_USERNAME}
+      - MONGO_PASSWORD=${MONGO_PASSWORD}
+      - PORT=3002
+      - JWT_SECRET=${AUTH_JWT_SECRET}
+      - BCRYPT_SALT_ROUNDS=${AUTH_BCRYPT_SALT_ROUNDS}
+    depends_on:
+      - mongodb
+      
   lobby:
     build: ./services/lobby
     ports: 
@@ -25,6 +42,7 @@ services:
       - PORT=3000
     depends_on:
       - mongodb
+  
   game:
     build: ./services/game
     ports: 

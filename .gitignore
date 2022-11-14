@@ -7,4 +7,5 @@ services/**/node_modules
 
 # db
 services/mongodb/data
+services/postgres/data
 **/.DS_Store

@@ -1,53 +1,59 @@
 
 
 var socket = io.connect('http://localhost:3001');
+var yourTurn = true;
+
+const moves = {
+    "rock" : "scissors",
+    "paper": "rock",
+    "scissors": "paper"
+}
+
 
 var communicat = document.getElementById('communicat')
-var decision = "",
-        rockBtn = document.getElementById('rock'),
+var roundScore = document.getElementById('roundScore')
+var gameScore = document.getElementById('gameScore')
+var decision = ""
+const rockBtn = document.getElementById('rock'),
         paperBtn = document.getElementById('paper'),
-        scissorsBtn = document.getElementById('scissors');
+        scissorsBtn = document.getElementById('scissors')
         
 
-//rock button emitter
-rockBtn.addEventListener('click',function() {
+//Rock button emitter
+rockBtn.addEventListener('click',(decision) => {
 
-    //communicat.innerHTML += '<p><em> it is a rock </em></p>';
-    console.log('im alive socket emiter');
-
-    socket.emit('communicat', {
-        communicat: communicat.value
-    });
+    yourTurn = false;
     decision = 'rock';
-    
+    socket.emit('communicat', decision);
+
 });
 
-paperBtn.addEventListener('click',function() {
+//Paper button emitter
+paperBtn.addEventListener('click',(decision) => {
 
-    //communicat.innerHTML += '<p><em> it is a rock </em></p>';
-    console.log('im alive socket emiter');
-
-    socket.emit('communicat', {
-        communicat: communicat.value
-    });
+    yourTurn = false;
     decision = 'paper';
+    socket.emit('communicat', decision);
+    
     
 });
 
-scissorsBtn.addEventListener('click',function() {
+//Scissors button emitter
+scissorsBtn.addEventListener('click',(decision) =>{
 
-    //communicat.innerHTML += '<p><em> it is a rock </em></p>';
-    console.log('im alive socket emiter');
-
-    socket.emit('communicat', {
-        communicat: communicat.value
-    });
+    yourTurn = false;
     decision = 'scissors';
-    console.log(decision);
+    socket.emit('communicat', decision);
+    
+
 });
 
-socket.on('communicat',function(data){
-    console.log(decision);
+
+//Listen for events, based on results cheange html content
+socket.on('communicat',(arg) => {
+
+    decision = arg;
+
     switch(decision) {
         case 'rock':
             communicat.innerHTML += '<p><em> it is a rock </em></p>';

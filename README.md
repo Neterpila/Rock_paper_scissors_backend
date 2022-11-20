@@ -10,7 +10,7 @@ Backend consists of several microservices each run in docker using compose. This
 ## Architecture and description
 *Things you are gonna read down below might be a subject for constant change*
 
-![Project architecture](./misc/architecture.jpg)
+![Project architecture](./misc/architecture.jpeg)
 
 Planned services:
 - Game Service - a service that manages the game, saves the players' choices and provides the player with the choice of another player in a given round.

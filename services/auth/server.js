@@ -1,9 +1,16 @@
-//require("dotenv").config();
 const express = require("express");
 const cors = require('cors');
 const bodyParser = require('body-parser');
 
-const db = require('./db');
+const fs = require('fs');
+const jwk_path = './config/jwk.json';
+
+if (!fs.existsSync(jwk_path))
+    throw {
+        message: "no jwk file found under " + jwk_path
+    }
+
+const db = require('./app/db');
 
 const app = express();
 
@@ -14,9 +21,10 @@ app.use(cors());
 
 app.use(require("./app/auth"));
 
-app.get("/protected_resource", require("./app/validate"), (req, res) => {
-    //console.log(req);
-    res.status(200).send({ message: "Welcome " + req.user.nickname + "! You gained access to classified information." });
+app.use("/jwk", express.static(jwk_path));
+
+app.get("/health", (req, res) => {
+    return res.status(200).send({ status: "ok" });
 });
 
 app.use(require("./app/error_handler"));

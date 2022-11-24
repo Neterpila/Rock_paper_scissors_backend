@@ -11,6 +11,8 @@ app.use(bodyParser.json());
 
 app.use(cors());
 
+app.use(require('./app/auth/jwt_decoder'));
+
 app.use('/lobby', require('./app/lobby/lobby.controller'));
 
 app.use(require('./app/error/handler'));

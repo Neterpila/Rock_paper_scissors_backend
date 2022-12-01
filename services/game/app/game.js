@@ -15,8 +15,8 @@ var roundScore = document.getElementById('roundScore')
 var gameScore = document.getElementById('gameScore')
 var decision = ""
 const rockBtn = document.getElementById('rock'),
-        paperBtn = document.getElementById('paper'),
-        scissorsBtn = document.getElementById('scissors')
+      paperBtn = document.getElementById('paper'),
+      scissorsBtn = document.getElementById('scissors')
         
 
 //Rock button emitter

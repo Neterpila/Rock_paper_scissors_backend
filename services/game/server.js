@@ -1,18 +1,26 @@
-const { Server } = require('ws');
- 
-const port = process.env.PORT || 3001;
+var express = require('express');
+var socket = require('socket.io');
 
-const sockets_server = new Server({ port: port });
 
-sockets_server.on('connection', (ws, req) => {
-    console.log('New client connected!'); 
-    //console.log(req);
-    //console.log(sockets_server.clients);
 
-    ws.on('message', (data) => {
-        const message = JSON.parse(data);
-        console.log(message);
+var app = express();
+var server = app.listen(3001,function() {
+    console.log('GameServer listening for requests on port 3001');
+});
+ //Can use path module but bruh
+app.use(express.static('app'));
+
+
+
+var io = socket(server);
+io.on('connection',(socket) => {
+
+    console.log('Made socket connection',socket.id);
+
+    socket.on('communicat',(decision) => {
+        io.sockets.emit('communicat',decision);
     });
 
-   ws.on('close', () => console.log('Client has disconnected!'));
+
 });
+

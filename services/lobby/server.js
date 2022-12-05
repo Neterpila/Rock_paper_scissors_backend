@@ -1,5 +1,5 @@
 const express = require('express');
-const cors = require('cors');
+//const cors = require('cors');
 const bodyParser = require('body-parser');
 
 const db = require('./db');
@@ -9,7 +9,7 @@ const app = express();
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
 
-app.use(cors());
+//app.use(cors());
 
 app.use(require('./app/auth/jwt_decoder'));
 

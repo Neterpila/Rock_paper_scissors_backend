@@ -50,6 +50,11 @@ services:
     depends_on:
       auth:
         condition: "service_healthy"
+    healthcheck:
+      test: ["CMD", "curl", "http://localhost:8080/__health"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
       
   lobby:
     build: ./services/lobby
@@ -79,3 +84,14 @@ services:
       - PORT=3001
     depends_on:
       - mongodb
+
+  swagger:
+    build: ./services/swagger
+    expose:
+      - ${SWAGGER_PORT}
+    ports:
+      - ${SWAGGER_PORT}:8080
+    depends_on:
+      - gateway
+    environment:
+      - SWAGGER_JSON=/swagger.yaml

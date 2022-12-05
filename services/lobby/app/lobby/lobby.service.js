@@ -6,7 +6,6 @@ async function create(data, owner) {
     try {
         lobby = _.pick(data, ["name", "password"]);
         lobby.owner = owner;
-        console.log(lobby);
         lobby = new Lobby(lobby);
         await lobby.save();
     } catch (e) {

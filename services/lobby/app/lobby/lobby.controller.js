@@ -11,7 +11,6 @@ router.put("/leave", leave);
 
 async function create(req, res, next) {
     let { username } = req.user || {};
-    console.log(req.body);
 
     if (!username)
         return res.status(400).send({ message: "No user info was found in the request" });

@@ -1,0 +1,169 @@
+openapi: 3.0.0
+info:
+  title: Rock Paper Scissors backend API
+  description: sample text
+  version: 0.1.0
+servers:
+  - url: http://localhost:8080
+    description: Local
+
+tags:
+  - name: user
+    description: registering and logging in
+  - name: lobby
+    description: Working with lobbies
+
+paths:
+  /register:
+    post:
+      tags: 
+        - user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+        required: true
+      responses:
+        '200':
+          description: Created user object along with the access token
+          content:
+            application/json:
+              schema: 
+                type: object
+                properties:
+                  user:
+                    type: object
+                    properties:
+                      username:
+                        type: string
+                        example: "created_user"
+                  access_token:
+                    description: JWT token required for backend access
+                    type: string
+                    example: qwe123asd.rty456fgh.uio789jkl
+        '400':
+          description: Bad request
+        '409':
+          description: Server conflict - e.g. user already exists
+
+  /login:
+    post:
+      tags: 
+        - user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+        required: true
+      responses:
+        '200':
+          description: Access token 
+          content:
+            application/json:
+              schema: 
+                type: object
+                properties:
+                  access_token:
+                    description: JWT token required for backend access
+                    type: string
+                    example: qwe123asd.rty456fgh.uio789jkl
+        '400':
+          description: Bad request
+        '401':
+          description: Invalid credentials
+
+  /lobby:
+    get:
+      tags: 
+        - lobby 
+      summary: Returns a list of lobbies.
+      responses:
+        '200':
+          description: A JSON array of lobbies
+          content:
+            application/json:
+              schema: 
+                type: array
+                items: 
+                  $ref: '#/components/schemas/Lobby'
+
+    post:
+      tags: 
+        - lobby
+      security:
+        - jwt: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Lobby'
+        required: true
+      responses:
+        '201':
+          description: Created lobby
+        '400':
+          description: Bad request
+        '401':
+          $ref: '#/components/responses/unauthorized'
+
+    delete:
+      tags: 
+        - lobby
+      security:
+        - jwt: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: 
+                lobby_id:
+                  type: string
+        required: true
+      responses:
+        '204':
+          description: Deleted lobby
+        '400':
+          description: Bad request
+        '401':
+          $ref: '#/components/responses/unauthorized'
+
+
+components:
+  schemas:
+    User:
+      required:
+        - username
+        - password
+      type: object
+      properties:
+        username:
+          type: string
+          example: the_dude_lebowski
+        password:
+          type: string
+          example: my_top_secret_password_123
+    Lobby:
+      required:
+        - name
+      type: object
+      properties:
+        name:
+          type: string
+          example: my first lobby
+        password:
+          type: string
+          example: my_lobby_password
+          desctription: Lobby can be password protected, so only certain users will be able to join it
+
+  securitySchemes:
+    jwt:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  responses:
+    unauthorized:
+      description: Access token is missing or invalid

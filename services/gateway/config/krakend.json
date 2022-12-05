@@ -1,0 +1,213 @@
+{
+    "$schema": "https://www.krakend.io/schema/v3.json",
+    "version": 3,
+    "name": "Rock-paper-scissors Backend Gateway",
+    "timeout": "3000ms",
+    "output_encoding": "no-op",
+    "debug_endpoint": true,
+    "extra_config": {
+      "security/cors": {
+        "allow_origins": [
+          "*"
+        ],
+        "allow_methods": [
+          "GET",
+          "POST",
+          "DELETE"
+        ],
+        "allow_headers": [
+          "Authorization",
+          "Content-Type"
+        ],
+        "expose_headers": [
+          "Content-Length",
+          "Content-Type"
+        ],
+        "debug": true
+      },
+      "router": {
+        "auto_options": true
+      }
+    },
+    "endpoints": [
+      {
+        "endpoint": "/register",
+        "method": "POST",
+        "output_encoding": "json",
+        "backend": [
+          {
+            "url_pattern": "/register",
+            "method": "POST",
+            "host": [
+              "http://auth:3002"
+            ],
+            "encoding": "json",
+            "extra_config": {
+              "backend/http": {
+                "return_error_details": "auth"
+              }
+            }
+          }
+        ],
+        "extra_config": {
+          "auth/signer": {
+            "alg": "HS256",
+            "jwk_url": "http://auth:3002/jwk",
+            "keys_to_sign": [
+              "access_token"
+            ],
+            "kid": "sim1",
+            "disable_jwk_security": true
+          }
+        }
+      },
+      {
+        "endpoint": "/login",
+        "method": "POST",
+        "output_encoding": "json",
+        "backend": [
+          {
+            "url_pattern": "/login",
+            "method": "POST",
+            "host": [
+              "http://auth:3002"
+            ],
+            "encoding": "json",
+            "extra_config": {
+              "backend/http": {
+                "return_error_details": "auth"
+              }
+            }
+          }
+        ],
+        "extra_config": {
+          "auth/signer": {
+            "alg": "HS256",
+            "jwk_url": "http://auth:3002/jwk",
+            "keys_to_sign": [
+              "access_token"
+            ],
+            "kid": "sim1",
+            "disable_jwk_security": true
+          }
+        }
+      },
+      {
+        "endpoint": "/lobby",
+        "method": "GET",
+        "backend": [
+          {
+            "url_pattern": "/lobby",
+            "method": "GET",
+            "host": [
+              "http://lobby:3000"
+            ]
+          }
+        ]
+      },
+      {
+        "endpoint": "/lobby",
+        "method": "POST",
+        "backend": [
+          {
+            "url_pattern": "/lobby",
+            "method": "POST",
+            "host": [
+              "http://lobby:3000"
+            ]
+          }
+        ],
+        "extra_config": {
+          "auth/validator": {
+            "alg": "HS256",
+            "jwk_url": "http://auth:3002/jwk",
+            "disable_jwk_security": true,
+            "cache": true,
+            "cache_duration": 3000
+          }
+        },
+        "input_headers": [
+          "Authorization",
+          "Content-Type"
+        ]
+      },
+      {
+        "endpoint": "/lobby",
+        "method": "DELETE",
+        "backend": [
+          {
+            "url_pattern": "/lobby",
+            "method": "DELETE",
+            "host": [
+              "http://lobby:3000"
+            ]
+          }
+        ],
+        "extra_config": {
+          "auth/validator": {
+            "alg": "HS256",
+            "jwk_url": "http://auth:3002/jwk",
+            "disable_jwk_security": true,
+            "cache": true,
+            "cache_duration": 3000
+          }
+        },
+        "input_headers": [
+          "Authorization",
+          "Content-Type"
+        ]
+      },
+      {
+        "endpoint": "/lobby/join",
+        "method": "PUT",
+        "backend": [
+          {
+            "url_pattern": "/lobby/join",
+            "method": "PUT",
+            "host": [
+              "http://lobby:3000"
+            ]
+          }
+        ],
+        "extra_config": {
+          "auth/validator": {
+            "alg": "HS256",
+            "jwk_url": "http://auth:3002/jwk",
+            "disable_jwk_security": true,
+            "cache": true,
+            "cache_duration": 3000
+          }
+        },
+        "input_headers": [
+          "Authorization",
+          "Content-Type"
+        ]
+      },
+      {
+        "endpoint": "/lobby/leave",
+        "method": "PUT",
+        "backend": [
+          {
+            "url_pattern": "/lobby/leave",
+            "method": "PUT",
+            "host": [
+              "http://lobby:3000"
+            ]
+          }
+        ],
+        "extra_config": {
+          "auth/validator": {
+            "alg": "HS256",
+            "jwk_url": "http://auth:3002/jwk",
+            "disable_jwk_security": true,
+            "cache": true,
+            "cache_duration": 3000
+          }
+        },
+        "input_headers": [
+          "Authorization",
+          "Content-Type"
+        ]
+      }
+    ]
+  }

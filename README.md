@@ -41,6 +41,12 @@ Technologies:
 2. Create a pull request and request a review from one of the team members
 
 
+## API
+To view the endpoints available to the frontend please visit swagger.<br>
+Swagger is hosted as a separate service and is available under the 8081 port (unless you specifically change docker compose file).<br>
+If you run the backend on your local machine, just open your browser of choice and proceed to http://localhost:8081/
+
+
 ## Useful resources
 Docker overview
 https://youtu.be/gAkwW2tuIqE

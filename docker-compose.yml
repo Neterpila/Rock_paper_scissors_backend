@@ -10,7 +10,10 @@ services:
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
     volumes:
       # - ./services/mongodb/init.js:/docker-entrypoint-initdb.d/init.js:ro
-      - ./services/mongodb/data:/data/db
+      - ./services/mongodb/data:/data/db:rw
+    command: 
+      - '--logpath'
+      - '/dev/null'
 
   auth:
     build: ./services/auth
@@ -27,6 +30,26 @@ services:
       - BCRYPT_SALT_ROUNDS=${AUTH_BCRYPT_SALT_ROUNDS}
     depends_on:
       - mongodb
+    healthcheck:
+      test: ["CMD", "curl", "http://localhost:3002/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+    # volumes:
+      # - ./services/auth/config/jwk.json:/keys/jwk.json
+
+  gateway:
+    build: ./services/gateway
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    environment:
+      - FC_ENABLE=1
+      - FC_PARTIALS="./config/partials"
+    depends_on:
+      auth:
+        condition: "service_healthy"
       
   lobby:
     build: ./services/lobby

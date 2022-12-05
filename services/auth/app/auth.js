@@ -1,5 +1,3 @@
-const jwt = require("jsonwebtoken");
-const jwt_secret = process.env.JWT_SECRET || "secret";
 const bcrypt = require("bcryptjs");
 const bcrypt_salt_rounds = parseInt(process.env.BCRYPT_SALT_ROUNDS) || 10;
 
@@ -8,50 +6,34 @@ const router = express.Router();
 const User = require('./user');
 const _ = require('lodash');
 
-function createToken(user) {
-    return jwt.sign(
-        { 
-            _id: user._id, 
-            nickname: user.nickname
-        },
-        jwt_secret,
-        /*{
-            expiresIn: "2h",
-        }*/
-    )
+function tokenPayload(user) {
+    return {
+        "iss": "https://github.com/Neterpila/Rock_paper_scissors_backend",
+        "sub": user.username
+    }
 }
 
 router.post("/register", async (req, res, next) => {
     try {
-        // Get user input
-        const { nickname, password } = req.body;
-
-        // Validate user input
-        if (!nickname || !password) {
-            res.status(400).send({ message: "Request must contain fields: 'nickname', 'password'" });
+        const { username, password } = req.body;
+        if (!username || !password) {
+            return res.status(400).send({ message: "Request must contain fields: 'username', 'password'" });
         }
 
-        // check if user already exist
-        // Validate if user exist in our database
-        let old_user = await User.findOne({ nickname: nickname });
+        let old_user = await User.findOne({ username: username });
         if (old_user)
-            return res.status(409).send({ message: "User with such nickname already exists. If it's yout account, please login instead" });
+            return res.status(409).send({ message: "User with such username already exists. If it's your account, please login instead" });
 
-        // Create user in our database
         const user = await User.create({
-            nickname: nickname,
-            password: await bcrypt.hash(password, 10)
+            username: username,
+            password: await bcrypt.hash(password, bcrypt_salt_rounds)
         });
-
-        // Create token
-        const token = createToken(user);
-
-        // save user token
-        user.token = token;
         await user.save();
 
-        // return new user
-        return res.status(201).send(_.omit(user.toObject(), ["password"]));
+        return res.status(201).send({
+            user: _.omit(user.toObject(), ["password"]),
+            access_token: tokenPayload(user)
+        });
     } catch (err) {
         console.error("register\n" + err.message || err);
         next(err);
@@ -60,27 +42,18 @@ router.post("/register", async (req, res, next) => {
 
 router.post("/login", async (req, res, next) => {
     try {
-        // Get user input
-        const { nickname, password } = req.body;
-
-        // Validate user input
-        if (!nickname || !password) {
-            res.status(400).send({ message: "Request must contain fields: 'nickname', 'password'" });
+        const { username, password } = req.body;
+        if (!username || !password) {
+            return res.status(400).send({ message: "Request must contain fields: 'username', 'password'" });
         }
-        // Validate if user exist in our database
-        const user = await User.findOne({ nickname: nickname });
 
+        const user = await User.findOne({ username: username });
         if (!user || !(await bcrypt.compare(password, user.password))) 
-            res.status(401).send({ message: "Invalid Credentials" });
+            return res.status(401).send({ message: "Provided username and password are invalid" });
 
-        // Create token
-        const token = createToken(user);
-
-        // save user token
-        user.token = token;
-        await user.save();
-
-        return res.status(200).send(_.omit(user.toObject(), ["password"]));
+        return res.status(200).send({
+            access_token: tokenPayload(user)
+        });
     } catch (err) {
         console.error("login\n" + err.message || err);
         next(err);

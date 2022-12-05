@@ -10,7 +10,7 @@ services:
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
     volumes:
       # - ./services/mongodb/init.js:/docker-entrypoint-initdb.d/init.js:ro
-      - ./services/mongodb/data:/data/db
+      - ./services/mongodb/data:/data/db:rw
     command: 
       - '--logpath'
       - '/dev/null'

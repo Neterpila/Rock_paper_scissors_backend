@@ -5,10 +5,12 @@ let clientRoom;
 let yourTurn;
 let clientNumberLocal;
 let myMove;
-socket.on('serverMsg', (roomNumber,clientNumber) => {
-    console.log('I im in room ' + roomNumber + ' As client nr : ' + clientNumber);
+let playerNo;
+socket.on('serverMsg', (roomNumber,clientNumber,no) => {
+    console.log('I im in room ' + roomNumber + ' As client nr : ' + clientNumber + ' As player nr ' + no);
     clientRoom = roomNumber;
     clientNumberLocal = clientNumber;
+    playerNo = no;
 })
 
 const moves = {
@@ -57,13 +59,33 @@ scissorsBtn.addEventListener('click',(decision) =>{
 
 
 //Listen for events, based on results cheange html content
-socket.on('communicat',(arg) => {
+socket.on('communicat',(decision,no) => {
+    console.log(" Player no : " + no);
+    if(playerNo == no) {
+        myDecision = decision;
+            //Just post my own decision
+            switch(myDecision) {
+                case 'rock':
+                    communicat.innerHTML += `<p><em> I as player  ${playerNo}   use Rock! </em></p>`;
+                    break;
+                case 'paper':
+                    communicat.innerHTML += `<p><em> I as player  ${playerNo}   use Paper! </em></p>`;
+                    break;
+                case 'scissors':
+                    communicat.innerHTML += `<p><em> I as player  ${playerNo}   use Scissors! </em></p>`;
+                    break;
+            }
+    }
 
-    decision = arg;
-    //Just post my own decision
-    switch(decision) {
+})
+
+socket.on('enemyDecision',(decision) => {
+
+    enemyDecision = decision;
+
+    switch(enemyDecision) {
         case 'rock':
-            communicat.innerHTML += '<p><em> It is a rock </em></p>';
+            communicat.innerHTML += `<p><em> I as player  ${clientNumberLocal}    use Rock! </em></p>`;
             break;
         case 'paper':
             communicat.innerHTML += '<p><em> it is a paper </em></p>';
@@ -72,22 +94,6 @@ socket.on('communicat',(arg) => {
             communicat.innerHTML += '<p><em> it is a scissors </em></p>';
             break;
     }
-
-    socket.on('enemyDecision',(arg) => {
-
-        enemyDecision = arg;
-
-        switch(enemyDecision) {
-            case 'rock':
-                break;
-            case 'paper':
-                communicat.innerHTML += '<p><em> it is a paper </em></p>';
-                break;
-            case 'scissors':
-                communicat.innerHTML += '<p><em> it is a scissors </em></p>';
-                break;
-        }
-   
 })
 
 

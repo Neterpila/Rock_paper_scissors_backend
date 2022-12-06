@@ -6,7 +6,7 @@ class Player {
         this.roomNumber = roomNumber;
         this.no = no;
         this.score = 0;
-        this.yourTurn = false;
+        this.yourTurn = true;
     }
 
     addPoint() {
@@ -37,14 +37,16 @@ io.on('connection',(socket) => {
     roomNumber=Math.round(clientNumber/2);
     console.log('New client no.: ' + clientNumber + ' room no.: ' + roomNumber);
     socket.join(roomNumber);
-    socket.emit('serverMsg',roomNumber,clientNumber);
+
 
 
     if(clientNumber % 2 === 1){
         players[socket.id] = new Player(roomNumber,1);
+        socket.emit('serverMsg',roomNumber,clientNumber,1);
     }
     else if (clientNumber % 2 === 0){
         players[socket.id] = new Player(roomNumber,2);
+        socket.emit('serverMsg',roomNumber,clientNumber,2);
     }
 
     console.log(players);
@@ -55,18 +57,28 @@ io.on('connection',(socket) => {
         var moveMade = 0;
         //Check if player had made a move if he did, server no longer emit's
         if(players[socket.id].yourTurn==true){
-            io.to(roomNumber).emit('communicat',decision);
+            io.to(roomNumber).emit('communicat',decision,players[socket.id].no);
             players[socket.id].yourTurn=false;
         }
+        else {
+                         console.log("Wait for your turn move made " + moveMade);
+                     }
 
-        //Check if both player made a move - I Know it's terrible Might take it to refresh interval function for whole server. send communicat about ability to make new move
-
+        //Check if both player made a move - I Know it's terrible Might use  interval function for whole serice. Then send communicat about ability to make new move
+        console.log("Check if both Player made a move");
         for(var player in players) {
-            if(player.roomNumber == currentRoom && player.yourTurn=false) {
-                moveMade++;
+            if((player.roomNumber == currentRoom) && (player.yourTurn==false)) {
+                moveMade=moveMade+1;
             }
-            if(moveMade==2);
+        }
+        if(moveMade>=2) {
             io.to(roomNumber).emit('enemyDecision',decision);
+            for(var player in players) {
+                if(player.roomNumber == currentRoom) {
+                    player.yourTurn==true;
+                }
+            }
+
         }
 
     });

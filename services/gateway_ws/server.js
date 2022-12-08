@@ -2,7 +2,18 @@ const express = require('express');
 const app = express();
 const jwt_validator = require("./app/jwt_validate");
 
-const expressWs = require('express-ws')(app);
+const expressWs = require('express-ws')(app, null, {
+    wsOptions: { 
+        verifyClient: ({ req }, done) => {
+            jwt_validator(req.headers.authorization).then(payload => {
+                req.user = payload;
+                return done(true);
+            }).catch(e => {
+                return done(false, 401);
+            })
+        }
+    }
+});
 
 const ws_client = require('ws');
 

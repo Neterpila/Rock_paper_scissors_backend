@@ -1,56 +1,82 @@
+const express = require('express');
+const app = express();
+const jwt_validator = require("./app/jwt_validate");
+
+const expressWs = require('express-ws')(app);
+
 const ws_client = require('ws');
-const ws_server = require('ws').Server;
-const short = require('short-uuid');
 
-let client_connections = {};
+let client_connections = {
+    lobby: {},
+    game: {}
+};
  
-const sockserver = new ws_server({ port: 3011 });
-const backend_connection = new ws_client("ws://lobby:3010/");
+let backend_connections = {};
+try {
+    backend_connections.lobby = new ws_client("ws://lobby:3010/");
+    console.log("WebSocket to Lobby Service successfully established");
+} catch (err) {
+    console.log("WebSocket to Lobby Service failed:\n" + err.message || err.stack || err);
+}
+//todo: add another connection to game service here later
 
-backend_connection.on("connection", () => {
-    console.log("WebSocket to backend successfully established");
-});
-
-backend_connection.on("message", (message) => {
+backend_connections.lobby.on("message", (message) => {
     message = JSON.parse(message);
-    let id = message.uuid;
-    console.log("received message from backend for id " + id + " with data:\n" + message.data);
-    console.log("sending the message back to the client " + id);
-    client_connections[id].send(message.data);
+    let user = message.user;
+    console.log("received message from backend for user " + user.username + " with data: " + message.data);
+    console.log("sending the message back to the client " + user.username);
+    client_connections.lobby[user.username].send(message.data);
 });
 
-sockserver.on("connection", (client_connection, req) => {
-    if (req.headers.authorization !== "Bearer qwe123") {
-        client_connection.send("Token invalid");
-        client_connection.close();
-    }
+const handle_client_connection = (client_connection, req, backend_service, params) => {
+    const user = req.user;
 
-    const id = short.generate();
-    client_connections[id] = client_connection;
-    console.log("client connection opened: " + id);
+    client_connections[backend_service][user.username] = client_connection;
+    console.log("client connection opened: " + user.username);
 
-    console.log("sending open event to backend: " + id);
-    backend_connection.send(JSON.stringify({
-        "event": "open",
-        "uuid": id
+    console.log("sending open event to backend: " + user.username);
+    backend_connections[backend_service].send(JSON.stringify({
+        event: "open",
+        user,
+        params
     }));
 
     client_connection.on("close", () => {
-        console.log("client connection closed: " + id);
-        console.log("sending close event to backend: " + id);
-        backend_connection.send(JSON.stringify({
-            "event": "close",
-            "uuid": id
+        console.log("client connection closed: " + user.username);
+        console.log("sending close event to backend: " + user.username);
+        backend_connections[backend_service].send(JSON.stringify({
+            event: "close",
+            user,
+            params
         }));
+        delete client_connections[backend_service][user.username];
     });
 
     client_connection.on("message", message => {
-        console.log("received message from client:\n" + message);
-        console.log("redirecting message from client " + id + " to backend ");
-        backend_connection.send(JSON.stringify({
-            "event": "message",
-            "uuid": id,
-            "data": message.toString('utf8')
+        console.log("received message from client:" + message);
+        console.log("redirecting message from client " + user.username + " to backend ");
+        backend_connections[backend_service].send(JSON.stringify({
+            event: "message",
+            user,
+            params,
+            data: message.toString('utf8')
         }));
     })
+}
+
+app.ws('/lobby/:lobby_id', (client_connection, req) => {
+    handle_client_connection(client_connection, req, "lobby", {
+        lobby_id: req.params.lobby_id
+    });
+});
+
+//todo: add another route for game service here
+
+app.get('/health', function(req, res, next){
+    res.status(200).send();
+});
+
+const port = process.env.PORT || 3011;
+app.listen(port, () => {
+    console.log('Server listening on port ' + port);
 });

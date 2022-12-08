@@ -56,7 +56,7 @@ services:
       timeout: 3s
       retries: 3
 
-  ws_gateway:
+  gateway_ws:
     build: ./services/gateway_ws
     ports: 
       - "3011:3011"

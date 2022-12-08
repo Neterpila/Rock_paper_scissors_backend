@@ -24,7 +24,7 @@ let client_connections = {
  
 let backend_connections = {};
 try {
-    backend_connections.lobby = new ws_client("ws://lobby:3010/");
+    backend_connections.lobby = new ws_client("ws://lobby:3000/ws");
     console.log("WebSocket to Lobby Service successfully established");
 } catch (err) {
     console.log("WebSocket to Lobby Service failed:\n" + err.message || err.stack || err);

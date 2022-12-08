@@ -1,9 +1,12 @@
-const { Server } = require('ws');
+const express = require('express');
+const expressWs = require('express-ws')(express);
+const router = express.Router();
+const lobbyService = require('./lobby.service');
+const _ = require('lodash');
 
 let ws_clients = {};
  
-const sockserver = new Server({ port: 3010 });
-sockserver.on('connection', (connection, req) => {
+router.ws("/", (connection, req) => {
     console.log("Gateway successfully opened a WebSocket connection");
 
     connection.on('close', () => console.log('Gateway disconnected!'));
@@ -28,3 +31,5 @@ sockserver.on('connection', (connection, req) => {
         }
     });
 });
+
+module.exports = router;

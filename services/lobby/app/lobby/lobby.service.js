@@ -40,7 +40,7 @@ async function remove(lobby_id, owner) {
 }
 
 async function get(filters = {}) {
-    return Lobby.find(filters);
+    return await Lobby.find(filters);
 }
 
 async function join(lobby_id, user) {
@@ -86,4 +86,29 @@ async function leave(lobby_id, user) {
     return lobby;
 }
 
-module.exports = { create, remove, get, join, leave };
+async function getConnectedUsers(lobby_id) {
+    let lobby;
+    try {
+        lobby = await Lobby.findById(lobby_id);
+        if (!lobby)
+            throw {};
+    } catch (e) {
+        throw {
+            type: "does_not_exist"
+        }
+    }
+
+    return lobby.players;
+}
+
+async function clearConnectedUsers() {
+    let lobbies = await Lobby.find();
+
+    await Promise.all(lobbies.map(async lobby => {
+        lobby.players = [];
+        await lobby.save();
+    }));
+    console.log("clear finishied");
+}
+
+module.exports = { create, remove, get, join, leave, getConnectedUsers, clearConnectedUsers };

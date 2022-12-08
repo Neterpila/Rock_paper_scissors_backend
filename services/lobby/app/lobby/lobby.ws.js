@@ -14,15 +14,15 @@ sockserver.on('connection', (connection, req) => {
 
         switch(message.event) {
             case "open":
-                console.log("received an open event for id: " + message.uuid)
+                console.log("received an open event for user: " + message.user.username)
                 break;
             case "close":
-                console.log("received a close event for id: " + message.uuid)
+                console.log("received a close event for user: " + message.user.username)
                 break;
             case "message":
-                console.log("received a message event for id: " + message.uuid)
+                console.log("received a message event for user: " + message.user.username)
                 connection.send(JSON.stringify({
-                    "uuid": message.uuid,
+                    "user": message.user,
                     "data": "answer to " + message.data
                 }));
         }

@@ -22,8 +22,6 @@ app.listen(port, () => {
     console.log('Server listening on port ' + port);
 });
 
-require("./app/lobby/lobby.ws");
-
 app.use('/health', async (req, res) => {
     res.status(200).send();
 });

@@ -7,6 +7,7 @@ const expressWs = require('express-ws')(app, null, {
         verifyClient: ({ req }, done) => {
             jwt_validator(req.headers.authorization).then(payload => {
                 req.user = payload;
+                //todo: check if the token bearer is already connected to the endpoint
                 return done(true);
             }).catch(e => {
                 return done(false, 401);

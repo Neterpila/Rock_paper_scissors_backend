@@ -20,7 +20,7 @@ router.ws("/", (connection, req) => {
         
         switch(message.event) {
             case "open":
-                console.log("received an open event for user: " + user.username);
+                console.log("processing the open event of user " + user.username + "...");
                 try {
                     await join_lobby(connection, message.params.lobby_id, user);
                 } catch (e) {
@@ -32,7 +32,7 @@ router.ws("/", (connection, req) => {
                 }
                 break;
             case "close":
-                console.log("received a close event for user: " + user.username);
+                console.log("processing the close event of user " + user.username + "...");
                 try {
                     await leave_lobby(connection, message.params.lobby_id, user);
                 } catch (e) {
@@ -43,12 +43,14 @@ router.ws("/", (connection, req) => {
                     }));
                 }
                 break;
-            case "message":
+            //todo: maybe add chat functionality
+            /*case "message":
                 console.log("received a message event for user: " + user.username)
                 connection.send(JSON.stringify({
                     "user": message.user,
                     "data": "answer to " + message.data
                 }));
+                break;*/
             default: 
                 console.error("ws | unknown event: " + message.event + ". Event ignored");
         }

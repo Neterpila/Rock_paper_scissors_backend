@@ -103,8 +103,8 @@ function handleBackendConnection(service_name, connection) {
         try {
             client_connection = Clients.getConnection(service_name, user);
         } catch (err) {
-            console.error(`Could not get client connection for ${service_name} and ${user.username}. 
-                This message from backend will be ignored:\n` + JSON.stringify(message, null, "  "));
+            console.error(`Could not get client connection for ${service_name} and ${user.username}` + 
+                `\nThis message from backend will be ignored:\n` + JSON.stringify(message, null, "  "));
             return;
         }
 

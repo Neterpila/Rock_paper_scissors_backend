@@ -31,7 +31,7 @@ app.get('/health', function(req, res, next){
     res.status(200).send();
 });
 
-const port = process.env.PORT || 3011;
+const port = process.env.PORT || 8080;
 app.listen(port, () => {
     console.log('Server listening on port ' + port);
 });

@@ -59,9 +59,10 @@ services:
   gateway_ws:
     build: ./services/gateway_ws
     ports: 
-      - "3011:3011"
+      - "8082:8080"
     environment:
       - DEBUG_LOG=true
+      - PORT=8080
     depends_on:
       lobby:
         condition: "service_healthy"

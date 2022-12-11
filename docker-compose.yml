@@ -55,11 +55,23 @@ services:
       interval: 5s
       timeout: 3s
       retries: 3
+
+  gateway_ws:
+    build: ./services/gateway_ws
+    ports: 
+      - "8082:8080"
+    environment:
+      - DEBUG_LOG=true
+      - PORT=8080
+    depends_on:
+      lobby:
+        condition: "service_healthy"
       
   lobby:
     build: ./services/lobby
     ports: 
       - "3000:3000"
+      - "3010:3010"
     environment:
       - MONGO_HOSTNAME=mongodb
       - MONGO_PORT=${MONGO_PORT}
@@ -68,8 +80,14 @@ services:
       - MONGO_PASSWORD=${MONGO_PASSWORD}
       - GAME_SERVICE_HOSTNAME=game
       - PORT=3000
+      - DEBUG_LOG=true
     depends_on:
       - mongodb
+    healthcheck:
+      test: ["CMD", "curl", "http://localhost:3000/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
   
   game:
     build: ./services/game

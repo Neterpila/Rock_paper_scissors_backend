@@ -1,0 +1,21 @@
+{
+  "name": "websocket-gateway",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "ws": "^8.11.0",
+    "express-ws": "^5.0.2",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^8.5.1",
+    "axios-cache-interceptor": "^0.10.7",
+    "axios": "^1.2.1",
+    "lodash": "^4.17.21"
+  }
+}

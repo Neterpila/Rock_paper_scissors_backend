@@ -19,16 +19,7 @@ async function create(data, owner) {
 }
 
 async function remove(lobby_id, owner) {
-    let lobby;
-    try {
-        lobby = await Lobby.findById(lobby_id);
-        if (!lobby)
-            throw {};
-    } catch (e) {
-        throw {
-            type: "does_not_exist"
-        }
-    }
+    let lobby = await findById(lobby_id);
 
     if (lobby.owner !== owner)
         throw {
@@ -40,20 +31,24 @@ async function remove(lobby_id, owner) {
 }
 
 async function get(filters = {}) {
-    return Lobby.find(filters);
+    return await Lobby.find(filters);
 }
 
-async function join(lobby_id, user) {
-    let lobby;
+async function findById(id) {
     try {
-        lobby = await Lobby.findById(lobby_id);
+        let lobby = await Lobby.findById(id);
         if (!lobby)
-            throw {};
+            throw new Error();
+        return lobby;
     } catch (e) {
         throw {
             type: "does_not_exist"
         }
     }
+}
+
+async function join(lobby_id, user) {
+    let lobby = await findById(lobby_id);
 
     if(lobby.players.includes(user))
         return lobby;
@@ -69,16 +64,7 @@ async function join(lobby_id, user) {
 }
 
 async function leave(lobby_id, user) {
-    let lobby;
-    try {
-        lobby = await Lobby.findById(lobby_id);
-        if (!lobby)
-            throw {};
-    } catch (e) {
-        throw {
-            type: "does_not_exist"
-        }
-    }
+    let lobby = await findById(lobby_id);
 
     lobby.players = _.filter(lobby.players, player => player !== user);
     lobby = await lobby.save();
@@ -86,4 +72,17 @@ async function leave(lobby_id, user) {
     return lobby;
 }
 
-module.exports = { create, remove, get, join, leave };
+async function getConnectedUsers(lobby_id) {
+    return (await findById(lobby_id)).players;
+}
+
+async function clearConnectedUsers() {
+    let lobbies = await Lobby.find();
+
+    await Promise.all(lobbies.map(async lobby => {
+        lobby.players = [];
+        await lobby.save();
+    }));
+}
+
+module.exports = { create, remove, get, join, leave, getConnectedUsers, clearConnectedUsers };

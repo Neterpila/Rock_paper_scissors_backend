@@ -27,7 +27,7 @@ app.use(express.static('app'));
 
 let clientNumber = 0;
 let roomNumber;
-let players= {};
+Player[] players = new Player[10000];
 
 var io = socket(server);
 io.on('connection',(socket) => {
@@ -41,46 +41,53 @@ io.on('connection',(socket) => {
 
 
     if(clientNumber % 2 === 1){
-        players[socket.id] = new Player(roomNumber,1);
+        players[clientNumber] = new Player(roomNumber,1);
         socket.emit('serverMsg',roomNumber,clientNumber,1);
     }
     else if (clientNumber % 2 === 0){
-        players[socket.id] = new Player(roomNumber,2);
+        players[clientNumber] = new Player(roomNumber,2);
         socket.emit('serverMsg',roomNumber,clientNumber,2);
     }
 
     console.log(players);
 
     //Listen for button press
-    socket.on('communicat',(decision,roomNumber) => {
-        var currentRoom = players[socket.id].roomNumber;
+    socket.on('communicat',(decision,roomNumber,clientNumber) => {
         var moveMade = 0;
+
         //Check if player had made a move if he did, server no longer emit's
-        if(players[socket.id].yourTurn==true){
-            io.to(roomNumber).emit('communicat',decision,players[socket.id].no);
-            players[socket.id].yourTurn=false;
+        if(players[clientNumber].yourTurn==true){
+            io.to(roomNumber).emit('communicat',decision,players[clientNumber].no);
+            players[clientNumber].yourTurn=false;
         }
         else {
                          console.log("Wait for your turn move made " + moveMade);
-                     }
+        }
 
         //Check if both player made a move - I Know it's terrible Might use  interval function for whole serice. Then send communicat about ability to make new move
         console.log("Check if both Player made a move");
-        for(var player in players) {
-            if((player.roomNumber == currentRoom) && (player.yourTurn==false)) {
-                moveMade=moveMade+1;
+
+//        players.forEach(function(player, index) {
+//        if ((player.roomNumber == roomNumber) && (player.yourTurn==false)) {
+//            console.log("im inside " + Player.roomNumber + Player.yourTurn);
+//            moveMade++;
+//            }
+//        });
+        for(var Player in players) {
+            if((Player.roomNumber == roomNumber) && (Player.yourTurn==false)) {
+                console.log("im inside " + Player.roomNumber + Player.yourTurn);
+                moveMade++;
             }
         }
+
+
         if(moveMade>=2) {
-            io.to(roomNumber).emit('enemyDecision',decision);
-            for(var player in players) {
-                if(player.roomNumber == currentRoom) {
-                    player.yourTurn==true;
+            for(var Player in players) {
+                if(Player.roomNumber == roomNumber) {
+                    Player.yourTurn==true;
                 }
             }
-
         }
-
     });
 
 

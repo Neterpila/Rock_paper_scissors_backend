@@ -6,8 +6,6 @@ const _ = require('lodash');
 router.post("/", create);
 router.delete("/", remove);
 router.get("/", get);
-router.put("/join", join);
-router.put("/leave", leave);
 
 async function create(req, res, next) {
     let { username } = req.user || {};

@@ -2,10 +2,9 @@ var socket = io.connect('http://localhost:3001');
 
 
 let clientRoom;
-let yourTurn;
 let clientNumberLocal;
-let myMove;
 let playerNo;
+
 socket.on('serverMsg', (roomNumber,clientNumber,no) => {
     console.log('I im in room ' + roomNumber + ' As client nr : ' + clientNumber + ' As player nr ' + no);
     clientRoom = roomNumber;
@@ -34,26 +33,23 @@ const rockBtn = document.getElementById('rock'),
 //Rock button emitter
 rockBtn.addEventListener('click',(decision) => {
 
-    yourTurn = false;
     decision = 'rock';
-    socket.emit('communicat',decision,clientRoom);
+    socket.emit('communicat',decision,clientRoom,clientNumber);
 });
 
 //Paper button emitter
 paperBtn.addEventListener('click',(decision) => {
 
-    yourTurn = false;
     decision = 'paper';
-    socket.emit('communicat',decision,clientRoom);
+    socket.emit('communicat',decision,clientRoom,clientNumber);
     
 });
 
 //Scissors button emitter
 scissorsBtn.addEventListener('click',(decision) =>{
 
-    yourTurn = false;
     decision = 'scissors';
-    socket.emit('communicat',decision,clientRoom);
+    socket.emit('communicat',decision,clientRoom,clientNumber);
 
 });
 
@@ -61,40 +57,25 @@ scissorsBtn.addEventListener('click',(decision) =>{
 //Listen for events, based on results cheange html content
 socket.on('communicat',(decision,no) => {
     console.log(" Player no : " + no);
-    if(playerNo == no) {
+    if(playerNo=no) {
         myDecision = decision;
-            //Just post my own decision
-            switch(myDecision) {
-                case 'rock':
-                    communicat.innerHTML += `<p><em> I as player  ${playerNo}   use Rock! </em></p>`;
-                    break;
-                case 'paper':
-                    communicat.innerHTML += `<p><em> I as player  ${playerNo}   use Paper! </em></p>`;
-                    break;
-                case 'scissors':
-                    communicat.innerHTML += `<p><em> I as player  ${playerNo}   use Scissors! </em></p>`;
-                    break;
-            }
-    }
+    }   else enemyDecision=decision;
 
-})
-
-socket.on('enemyDecision',(decision) => {
-
-    enemyDecision = decision;
-
-    switch(enemyDecision) {
+    switch(decision) {
         case 'rock':
-            communicat.innerHTML += `<p><em> I as player  ${clientNumberLocal}    use Rock! </em></p>`;
+            communicat.innerHTML += `<p><em> Player  ${playerNo}  use Rock! </em></p>`;
             break;
         case 'paper':
-            communicat.innerHTML += '<p><em> it is a paper </em></p>';
+            communicat.innerHTML += `<p><em> Player  ${playerNo}  use Paper! </em></p>`;
             break;
         case 'scissors':
-            communicat.innerHTML += '<p><em> it is a scissors </em></p>';
+            communicat.innerHTML += `<p><em> Player  ${playerNo}  use Scissors! </em></p>`;
             break;
     }
+
+
 })
+
 
 
 

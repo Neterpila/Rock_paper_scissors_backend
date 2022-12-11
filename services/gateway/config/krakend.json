@@ -208,6 +208,19 @@
           "Authorization",
           "Content-Type"
         ]
+      },
+      {
+        "endpoint": "/game",
+        "method": "GET",
+        "backend": [
+          {
+            "url_pattern": "/game",
+            "method": "GET",
+            "host": [
+              "http://game:3001"
+            ]
+          }
+        ]
       }
     ]
   }

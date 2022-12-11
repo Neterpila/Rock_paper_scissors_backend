@@ -57,7 +57,7 @@ function handleClientConnection(connection, user, service_name, params) {
         // the close event is triggered if connection close was initiated both by client and the server.
         // if close was initiated by client, we want to do stuff described below.
         // if close was initiated by the server (i.e. the gateway) by request of the backend, stuff below is unnecessary
-        if (!client_connections[backend_service][user.username])
+        if (!client_connections[service_name][user.username])
             return;
 
         debug_log && console.log("Client connection closed for " + user.username + " was closed" +

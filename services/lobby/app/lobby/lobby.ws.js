@@ -3,6 +3,7 @@ const expressWs = require('express-ws')(express);
 const router = express.Router();
 const lobbyService = require('./lobby.service');
 const _ = require('lodash');
+const debug_log = process.env.DEBUG_LOG === "true";
 
 // purge all connected users from db when the server starts
 // because data about connected users is not removed from db when the server stops
@@ -14,48 +15,70 @@ router.ws("/", (connection, req) => {
     connection.on('close', () => console.log('Gateway disconnected!'));
 
     connection.on("message", async message => {
-        console.log("received message from gateway: \n" + message);
         message = JSON.parse(message);
+        debug_log && console.log("Received message from gateway: \n" + JSON.stringify(message, null, "  "));
         const user = message.user;
         
-        switch(message.event) {
-            case "open":
-                console.log("processing the open event of user " + user.username + "...");
-                try {
-                    await join_lobby(connection, message.params.lobby_id, user);
-                } catch (e) {
-                    console.error("ws | open event | unexpected error occured:\n" + e.message || e.stack || e);
-                    return connection.send(JSON.stringify({
-                        action: "close",
-                        user
-                    }));
-                }
-                break;
-            case "close":
-                console.log("processing the close event of user " + user.username + "...");
-                try {
-                    await leave_lobby(connection, message.params.lobby_id, user);
-                } catch (e) {
-                    console.error("ws | close event | unexpected error occured:\n" + e.message || e.stack || e);
-                    return connection.send(JSON.stringify({
-                        action: "close",
-                        user
-                    }));
-                }
-                break;
-            //todo: maybe add chat functionality
-            /*case "message":
-                console.log("received a message event for user: " + user.username)
-                connection.send(JSON.stringify({
-                    "user": message.user,
-                    "data": "answer to " + message.data
-                }));
-                break;*/
-            default: 
-                console.error("ws | unknown event: " + message.event + ". Event ignored");
+        debug_log && console.log(`Processing the ${message.event} event of ${user.username}...`);
+        try {
+            switch(message.event) {
+                case "open":
+                    return await join_lobby(connection, message.params.lobby_id, user);
+                case "close":
+                    return await leave_lobby(connection, message.params.lobby_id, user);
+                case "message":
+                    return handleMessageEvent(connection, message, user);
+                default: 
+                    console.error("ws | unknown gateway event: " + message.event + ". Event ignored");
+            }
+        } catch (e) {
+            console.error(`ws | ${message.event} event | unexpected error occured:\n` + e.message || e.stack || e);
+            return connection.send(JSON.stringify({
+                action: "close",
+                user
+            }));
         }
     });
 });
+
+async function handleMessageEvent(connection, message, user) {
+    let original_message;
+    try {
+        original_message = JSON.parse(message.data);
+    } catch (err) {
+        debug_log && console.log("Client's original message is not a JSON. Ignoring...");
+        return;
+    }
+
+    switch(original_message.action) {
+        case "chat":
+            return await sendChatMessage(connection, message.params.lobby_id, user, original_message.data);
+        //todo: support some more user interactions within a lobby - e.g. set ready status
+        default:
+            debug_log && console.error("ws | unknown action from client: " + original_message.action + ". Ignoring...");
+    }
+}
+
+async function sendChatMessage(connection, lobby_id, user, data) {
+    let connected_users = await lobbyService.getConnectedUsers(lobby_id);
+    connected_users = _.filter(connected_users, u => u !== user.username);
+
+    //broadcast the chat message to every other user in lobby
+    connected_users.forEach(u => {
+        connection.send(JSON.stringify({
+            action: "send",
+            user: {
+                username: u
+            },
+            data: JSON.stringify({
+                event: "chat",
+                from: user,
+                data: typeof data === "string" ? data : JSON.stringify(data)
+            })
+        }));
+    });
+    return;
+}
 
 async function join_lobby(connection, lobby_id, user) {
     try {

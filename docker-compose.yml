@@ -79,6 +79,7 @@ services:
       - MONGO_PASSWORD=${MONGO_PASSWORD}
       - GAME_SERVICE_HOSTNAME=game
       - PORT=3000
+      - DEBUG_LOG=true
     depends_on:
       - mongodb
     healthcheck:

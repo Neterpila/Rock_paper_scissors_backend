@@ -19,16 +19,7 @@ async function create(data, owner) {
 }
 
 async function remove(lobby_id, owner) {
-    let lobby;
-    try {
-        lobby = await Lobby.findById(lobby_id);
-        if (!lobby)
-            throw {};
-    } catch (e) {
-        throw {
-            type: "does_not_exist"
-        }
-    }
+    let lobby = await findById(lobby_id);
 
     if (lobby.owner !== owner)
         throw {
@@ -43,17 +34,21 @@ async function get(filters = {}) {
     return await Lobby.find(filters);
 }
 
-async function join(lobby_id, user) {
-    let lobby;
+async function findById(id) {
     try {
-        lobby = await Lobby.findById(lobby_id);
+        let lobby = await Lobby.findById(id);
         if (!lobby)
-            throw {};
+            throw new Error();
+        return lobby;
     } catch (e) {
         throw {
             type: "does_not_exist"
         }
     }
+}
+
+async function join(lobby_id, user) {
+    let lobby = await findById(lobby_id);
 
     if(lobby.players.includes(user))
         return lobby;
@@ -69,16 +64,7 @@ async function join(lobby_id, user) {
 }
 
 async function leave(lobby_id, user) {
-    let lobby;
-    try {
-        lobby = await Lobby.findById(lobby_id);
-        if (!lobby)
-            throw {};
-    } catch (e) {
-        throw {
-            type: "does_not_exist"
-        }
-    }
+    let lobby = await findById(lobby_id);
 
     lobby.players = _.filter(lobby.players, player => player !== user);
     lobby = await lobby.save();
@@ -87,18 +73,7 @@ async function leave(lobby_id, user) {
 }
 
 async function getConnectedUsers(lobby_id) {
-    let lobby;
-    try {
-        lobby = await Lobby.findById(lobby_id);
-        if (!lobby)
-            throw {};
-    } catch (e) {
-        throw {
-            type: "does_not_exist"
-        }
-    }
-
-    return lobby.players;
+    return (await findById(lobby_id)).players;
 }
 
 async function clearConnectedUsers() {
@@ -108,7 +83,6 @@ async function clearConnectedUsers() {
         lobby.players = [];
         await lobby.save();
     }));
-    console.log("clear finishied");
 }
 
 module.exports = { create, remove, get, join, leave, getConnectedUsers, clearConnectedUsers };

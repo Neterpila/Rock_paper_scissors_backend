@@ -60,6 +60,8 @@ services:
     build: ./services/gateway_ws
     ports: 
       - "3011:3011"
+    environment:
+      - DEBUG_LOG=true
     depends_on:
       lobby:
         condition: "service_healthy"

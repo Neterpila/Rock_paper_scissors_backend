@@ -1,4 +1,5 @@
 const ws_client = require('ws');
+const _ = require("lodash");
 let Clients;
 const debug_log = process.env.DEBUG_LOG === "true";
 
@@ -15,6 +16,40 @@ const backends = {
     }
 }
 let backend_connections = {};
+
+function validateMessageFromBackend(message) {
+    try {
+        message = JSON.parse(message);
+    } catch (e) {
+        throw new Error("message is not a json", e);
+    }
+    if (!validateObj(message, message_schema))
+        throw new Error("message format is not valid");
+
+    if ([send_schema, close_schema].every(schema => !validateObj(message, schema)))
+        throw new Error("message either has unsupported action or does not contain required fields");
+
+    return message;
+}
+function validateObj(obj, schema) {
+    return Object.keys(schema).filter(key => !schema[key](obj[key])).length === 0;
+}
+const message_schema = {
+    action: value => typeof value === "string",
+    user: value => _.isPlainObject(value) && validateObj(value, user_schema)
+};
+const user_schema = {
+    username: value => typeof value === "string"
+}
+const send_schema = {
+    action: value => value === "send",
+    data: value => typeof value !== "undefined"
+};
+const close_schema = {
+    action: value => value === "close",
+    status: value => typeof value === "undefined" || Number.isInteger(value),
+    reason: value => typeof value === "undefined" || typeof value === "string"
+};
 
 function getConnection(service_name) {
     if (!backend_connections[service_name]) 
@@ -54,8 +89,13 @@ function init(ws_clients) {
 
 function handleBackendConnection(service_name, connection) {
     connection.on("message", message => {
-        message = JSON.parse(message);
-        //todo: add backend message format validation
+        try {
+            message = validateMessageFromBackend(message);
+        } catch (e) {
+            console.error(`Received an invalid message from ${service_name} backend:\n` 
+                + message + `\nReason: ${e.message}.\nThis message is ignored.`);
+            return;
+        }
         debug_log && console.log("Received message from backend: " + JSON.stringify(message, null, "  "));
         const user = message.user;
 

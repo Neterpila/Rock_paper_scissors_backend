@@ -20,8 +20,9 @@ Therefore the gateway can identify every client connection by:
 - part of functionality the cllient wants to use - in our case it is either something related to lobby (joining, chatting, etc.) or something related to actual game (making moves etc.) - which is very convenient, as these are provided by 2 backend services.
 
 ## Implementation
-After considering everything explained in the previous chapter the following concept emerges:
+After considering everything explained in the previous chapter the following concept emerges:<br><br>
 ![WS Gateway architecture](../../misc/ws_gateway.jpeg)
+<br><br>
 Takeaways:
 - gateway keeps one WS connection at all times to any backend service
 - gateway provides one WS endpoint for each part of functionality (de facto for each backend service)
@@ -31,8 +32,8 @@ Takeaways:
 ### The language
 #### Key concept
 The gateway by itself does not know what to do with each client - this is the responsibility of backends.<br>
-The gateway <u>informs</u> the backend about what happens to its corresponding ws endpoint. In other words the gateway sends <u>events</u> to a backend.<br>
-Depending on what happens, a backend <u>commands</u> the gateway to do something with a specific client. In other words a backend sends <u>actions</u> to the gateway.
+The gateway <ins>informs</ins> the backend about what happens to its corresponding ws endpoint. In other words the gateway sends <ins>events</ins> to a backend.<br>
+Depending on what happens, a backend <ins>commands</ins> the gateway to do something with a specific client. In other words a backend sends <ins>actions</ins> to the gateway.
 
 #### How it works
 All of the messages sent within the connections from gateway to backends are expected to be a JSON string.

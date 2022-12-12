@@ -6,15 +6,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Game</title>
     <script src="/socket.io/socket.io.js"></script>
+    <style>
+        #game-window{
+            display: grid;
+            place-items: center;
+            padding: 4rem;
+        }
+        #communicat{
+            max-height: 50vh;
+            overflow-y:auto;
+            padding: 0 2rem;
+            margin:2rem 0;
+        }
+
+    </style>
 </head>
 <body>
     <div id ="game-window">
-        <div id = "communicat"></div>
+        
         <div id = "roundScore"></div>
+        <div id = "communicat"></div>
         <div id = "gameScore"></div>
-        <button id ="rock">Rock</button>
-        <button id ="paper">Paper</button>
-        <button id ="scissors">Scissors</button>
+        <div>
+            <button id ="rock">Rock</button>
+            <button id ="paper">Paper</button>
+            <button id ="scissors">Scissors</button>
+        </div>
+        
     </div>
 
     <script src = "./game.js"></script>

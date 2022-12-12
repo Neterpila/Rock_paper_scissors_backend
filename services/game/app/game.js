@@ -55,45 +55,14 @@ scissorsBtn.addEventListener('click',(decision) =>{
     yourTurn=false;
 });
 
-
-//Listen for events, based on results cheange html content
-//socket.on('communicat',(decision,no) => {
-//    console.log(" Player no : " + no);
-//    if(playerNo==no) {
-//        switch(decision) {
-//            case 'rock':
-//                communicat.innerHTML += `<p><em> Player  ${playerNo}  use Rock! </em></p>`;
-//                yourTurn=true;
-//                break;
-//            case 'paper':
-//                communicat.innerHTML += `<p><em> Player  ${playerNo}  use Paper! </em></p>`;
-//                yourTurn=true;
-//                break;
-//            case 'scissors':
-//                communicat.innerHTML += `<p><em> Player  ${playerNo}  use Scissors! </em></p>`;
-//                yourTurn=true;
-//                break;
-//        }
-//    }else if (yourTurn==false) {
-//
-//
-//    }
-//
-//
-//})
-
 socket.on('stateUpdate',data => {
     console.table(data)
+    roundScore.innerHTML = `<h2>YOU: ${data.youScore} OPPONENT: ${data.opponentScore}</h2>`
+    communicat.innerHTML += `<p><em> You choose  ${data.you} ! </em></p>`;
+    communicat.innerHTML += `<p><em> He choose  ${data.opponent} ! </em></p>`;
+    communicat.innerHTML += `<p><em> ${data.message} </em></p>`;
+    communicat.innerHTML += `<p><em> ------------------------------</em></p>`;
 
+    
 });
 
-
-
-
-
-//nozyce
-
-
-//wyjdz z gry
-
-//restart 

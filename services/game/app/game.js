@@ -4,6 +4,7 @@ var socket = io.connect('http://localhost:3001');
 let clientRoom;
 let clientNumberLocal;
 let playerNo;
+let yourTurn;
 
 socket.on('serverMsg', (roomNumber,clientNumber,no) => {
     console.log('I im in room ' + roomNumber + ' As client nr : ' + clientNumber + ' As player nr ' + no);
@@ -34,47 +35,58 @@ const rockBtn = document.getElementById('rock'),
 rockBtn.addEventListener('click',(decision) => {
 
     decision = 'rock';
-    socket.emit('communicat',decision,clientRoom,clientNumber);
+    socket.emit('makeMove',decision,clientRoom,clientNumberLocal);
+    yourTurn=false;
 });
 
 //Paper button emitter
 paperBtn.addEventListener('click',(decision) => {
 
     decision = 'paper';
-    socket.emit('communicat',decision,clientRoom,clientNumber);
-    
+    socket.emit('makeMove',decision,clientRoom,clientNumberLocal);
+    yourTurn=false;
 });
 
 //Scissors button emitter
 scissorsBtn.addEventListener('click',(decision) =>{
 
     decision = 'scissors';
-    socket.emit('communicat',decision,clientRoom,clientNumber);
-
+    socket.emit('makeMove',decision,clientRoom,clientNumberLocal);
+    yourTurn=false;
 });
 
 
 //Listen for events, based on results cheange html content
-socket.on('communicat',(decision,no) => {
-    console.log(" Player no : " + no);
-    if(playerNo=no) {
-        myDecision = decision;
-    }   else enemyDecision=decision;
+//socket.on('communicat',(decision,no) => {
+//    console.log(" Player no : " + no);
+//    if(playerNo==no) {
+//        switch(decision) {
+//            case 'rock':
+//                communicat.innerHTML += `<p><em> Player  ${playerNo}  use Rock! </em></p>`;
+//                yourTurn=true;
+//                break;
+//            case 'paper':
+//                communicat.innerHTML += `<p><em> Player  ${playerNo}  use Paper! </em></p>`;
+//                yourTurn=true;
+//                break;
+//            case 'scissors':
+//                communicat.innerHTML += `<p><em> Player  ${playerNo}  use Scissors! </em></p>`;
+//                yourTurn=true;
+//                break;
+//        }
+//    }else if (yourTurn==false) {
+//
+//
+//    }
+//
+//
+//})
 
-    switch(decision) {
-        case 'rock':
-            communicat.innerHTML += `<p><em> Player  ${playerNo}  use Rock! </em></p>`;
-            break;
-        case 'paper':
-            communicat.innerHTML += `<p><em> Player  ${playerNo}  use Paper! </em></p>`;
-            break;
-        case 'scissors':
-            communicat.innerHTML += `<p><em> Player  ${playerNo}  use Scissors! </em></p>`;
-            break;
-    }
+socket.on('stateUpdate',data => {
+    console.table(data)
 
+});
 
-})
 
 
 

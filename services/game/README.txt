@@ -3,12 +3,14 @@
 game.js is our client
 server.js is our server
 
-Client is sending info about decision (rock , paper , scissors). Based on that our server is emmiting same decision so all clients know what and (eventually) who choosed. At the same time our clients are listening so when they hear server they edit their html source. 
+Player A is sending info about decision (rock , paper , scissors).
+If our oponnent(player B) hasn't made his turn, we save decision of Player A and wait.
+When player B made his turn we update status of the game, check who won and send that info to both Players. 
+Then next round is started
 
-TODO
+<<TODO>>
 
-MatchScore
-GamesScore
+After both players join game we open on their side game client and send roomNumber as entry data. Both players are then in proper
+rooms and game is started.
 
-Rematch
-Blocking / Waiting for other player turn
+https://www.geeksforgeeks.org/how-to-open-url-in-a-new-window-using-javascript/

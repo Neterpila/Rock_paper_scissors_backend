@@ -61,6 +61,7 @@ async function handleMessageEvent(connection, message, user) {
             debug_log && console.error("ws | unknown action from client: " + original_message.action + ". Ignoring...");
     }
 }
+
 async function setReady(connection, lobby_id, user, status) {
     let status_changed = await lobbyService.setReady(lobby_id, user.username, status);
 
@@ -106,7 +107,7 @@ async function setReady(connection, lobby_id, user, status) {
                         game_id
                     })
                 }));
-                
+
                 //also unready the user
                 lobbyService.setReady(lobby_id, u.username, false);
             });

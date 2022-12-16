@@ -31,7 +31,12 @@ async function remove(lobby_id, owner) {
 }
 
 async function get(filters = {}) {
-    return await Lobby.find(filters);
+    let lobbies = await Lobby.find(filters);
+    return lobbies.map(l => {
+        l = l.toObject();
+        l.users = l.users.map(u => u.username);
+        return l;
+    });
 }
 
 async function findById(id) {
@@ -50,15 +55,17 @@ async function findById(id) {
 async function join(lobby_id, user) {
     let lobby = await findById(lobby_id);
 
-    if(lobby.players.includes(user))
+    if(lobby.users.some(u => u.username === user))
         return lobby;
 
-    if (lobby.players.length >= 2)
+    if (lobby.users.length >= 2)
         throw {
             type: "lobby_full"
         }
 
-    lobby.players.push(user);
+    lobby.users.push({
+        username: user
+    });
     lobby = await lobby.save();
     return lobby;
 }
@@ -66,23 +73,35 @@ async function join(lobby_id, user) {
 async function leave(lobby_id, user) {
     let lobby = await findById(lobby_id);
 
-    lobby.players = _.filter(lobby.players, player => player !== user);
+    lobby.users = _.filter(lobby.users, u => u.username !== user);
     lobby = await lobby.save();
 
     return lobby;
 }
 
 async function getConnectedUsers(lobby_id) {
-    return (await findById(lobby_id)).players;
+    return (await findById(lobby_id)).users;
 }
 
 async function clearConnectedUsers() {
     let lobbies = await Lobby.find();
 
     await Promise.all(lobbies.map(async lobby => {
-        lobby.players = [];
+        lobby.users = [];
         await lobby.save();
     }));
 }
 
-module.exports = { create, remove, get, join, leave, getConnectedUsers, clearConnectedUsers };
+async function setReady(lobby_id, username, status) {
+    let lobby = await Lobby.findById(lobby_id);
+    if (!lobby.users.some(u => u.username === username))
+        throw new Error(`User ${username} has not joined to lobby ${lobby_id}`);
+
+    let connected_user = _.find(lobby.users, { username });
+    let changed = connected_user.is_ready !== status;
+    connected_user.is_ready = status;
+    await lobby.save();
+    return changed;
+}
+
+module.exports = { create, remove, get, join, leave, getConnectedUsers, clearConnectedUsers, setReady };

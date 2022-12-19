@@ -47,6 +47,30 @@ Swagger is hosted as a separate service and is available under the 8081 port (un
 If you run the backend on your local machine, just open your browser of choice and proceed to http://localhost:8081/
 
 
+## Docker config info
+All the JS services and SwaggerUI are listening on the 8080 port by default. Mongo listens on it's default 27017 port.<br>
+Those are the ports that the services would request each other by inside the docker network.
+
+In order to send a request from the machine hosting the whole stack some port forwarding had to be made:
+- API Gateway - 8080
+- SwaggerUI - 8081
+- Lobby Service - 3000
+- Game Service - 3001
+- Auth Service - 3002
+- Mongo - 27020
+
+**Examples:**<br>
+The Lobby Service trying to connect to the MongoDB would use a url like this:<br>
+mongodb://db_username:db_password@mongo:27017 - where 'mongo' is the name of a service in compose<br>
+If you're running compose on your local machine and would want to connect to mongo directly (e.g. using a client like Compass), you would use:<br>
+mongodb://db_username:db_password@localhost:27020
+
+API Gateway trying to send a request to Lobby Service would use a url like this:<br>
+GET http://lobby:8080/ - where 'lobby' is the name of a service in compose<br>
+If you would want to request Lobby Service directly for debug reasons, you would use:<br>
+GET http://localhost:3000/
+
+
 ## Useful resources
 Docker overview
 https://youtu.be/gAkwW2tuIqE

@@ -1,6 +1,6 @@
 const express = require('express');
 const app = express();
-const jwt_validator = require("./app/jwt_validate");
+const jwt_validator = require("./app/auth/jwt_validator");
 
 require('express-ws')(app, null, {
     wsOptions: { 

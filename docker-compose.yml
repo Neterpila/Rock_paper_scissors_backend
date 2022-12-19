@@ -38,28 +38,10 @@ services:
     # volumes:
       # - ./services/auth/config/jwk.json:/keys/jwk.json
 
-  gateway:
-    build: ./services/gateway
-    ports:
-      - "80:80"
-      - "443:443"
-      - "8080:8080"
-    environment:
-      - FC_ENABLE=1
-      - FC_PARTIALS="./config/partials"
-    depends_on:
-      auth:
-        condition: "service_healthy"
-    healthcheck:
-      test: ["CMD", "curl", "http://localhost:8080/__health"]
-      interval: 5s
-      timeout: 3s
-      retries: 3
-
-  gateway_ws:
-    build: ./services/gateway_ws
+  api_gateway:
+    build: ./services/api_gateway
     ports: 
-      - "8082:8080"
+      - "8080:8080"
     environment:
       - DEBUG_LOG=true
       - PORT=8080
@@ -110,6 +92,6 @@ services:
     ports:
       - ${SWAGGER_PORT}:8080
     depends_on:
-      - gateway
+      - api_gateway
     environment:
       - SWAGGER_JSON=/swagger.yaml

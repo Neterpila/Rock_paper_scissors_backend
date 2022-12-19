@@ -9,7 +9,6 @@ async function create(data, owner) {
         lobby = new Lobby(lobby);
         await lobby.save();
     } catch (e) {
-        console.error(e);
         throw {
             type: "invalid_data"
         }

@@ -9,7 +9,8 @@ const expressWs = require('express-ws')(app);
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
 
-app.use(require('./app/auth/jwt_decoder'));
+//app.use(require('./app/auth/jwt_decoder'));
+app.use(require('./app/auth/user_parser'));
 
 app.use('/lobby', require('./app/lobby/lobby.controller'));
 

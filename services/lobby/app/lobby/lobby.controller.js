@@ -9,7 +9,6 @@ router.get("/", get);
 
 async function create(req, res, next) {
     let { username } = req.user || {};
-
     if (!username)
         return res.status(400).send({ message: "No user info was found in the request" });
 

@@ -2,6 +2,7 @@ const express = require('express');
 const app = express();
 const jwt_validator = require("./app/auth/jwt_validator");
 const bodyParser = require('body-parser');
+const cors = require('cors');
 
 require('express-ws')(app, null, {
     wsOptions: { 
@@ -15,6 +16,8 @@ require('express-ws')(app, null, {
         }
     }
 });
+
+app.use(cors({credentials: true, origin: true}));
 
 const ws_backend = require("./app/ws/backend");
 const ws_clients = require("./app/ws/clients");

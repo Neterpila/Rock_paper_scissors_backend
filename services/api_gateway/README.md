@@ -1,9 +1,31 @@
-# WS API Gateway
-## Disclamer
-The original plan was to have a centralized entrypoint to the backend. And as the gateway solution [KrakenD](https://www.krakend.io/docs/overview/) was used. <br>
-Also look [here](../gateway)
+# API Gateway
+This service serves as a single centralized entrypoint to the backend. Only this service is available from the "outside world". The rest of the services are located in an internal docker network and are inaccessible.<br>
+The main purpose is to handle authorization (so that internal services don't have to) and to route requests/connections.
 
-However, after the KrakenD was already in use and configured for a host of existing http endpoints, came the time to implement some websocket endpoints. ~~It is at this moment that we knew - we fucked up~~ At this point we realized, that KrakenD has websocket support only in enterprise edition, which we did not intent to get. That's why (at least for now) we ended up with 2 separate gateways: one already configured for http, and this one, custom wrote in JS, for ws connections.
+Backend offers functionality both over HTTP and WebSocket.
+
+## Authorization
+The backend uses JWT as an authorization method. Clients are expected to send their tokens within the Authorization header when they attempt to use a protected endpoint.
+
+# HTTP
+For available http endpoints that you can use as a client please visit SwaggerUI. Information on how to get there you can find [here](../../#api)
+
+In case of HTTP endpoints the gateway serves as a rather simple proxy that verifies the validity of the JWT token (where it is required) and responds with 401 if it's not. If the token is valid though, it simply sends the request further to a backend service and responds with it's response.
+
+HTTP endpoints are configured by a [json file](./app/http/config.json)
+
+For endpoints marked as *auth_required* the gateway also and an additional header in it's request to a backend service. This header contains the information about the user calling the endpoint. Header is simply a json:<br>
+**User: {"username":"the_dude_lebowski"}**
+
+
+# WebSocket
+When it comes down to WebSocket connections, things get a bit more complex. 
+
+If you are interested on how connect to WS endpoints and how to use them as a client, please visit the following READMEs:<br>
+- [Lobby](../lobby)<br>
+- [Game](../game/)
+
+Below you will find a detailed explanation of the inner workings of the gateway and it's communication with backend services.
 
 ## Key concepts and core assumptions
 ### Connection with backend
@@ -50,7 +72,3 @@ Messages sent from a backend to the gateway are required to have an 'action' fie
 There are 2 options:
 - send - commands the gateway to send a specified messsage back to the client
 - close - commands the gateway to close the client connection with the specified code and reason
-
-### Authorization
-Clients are expected to send their jwt token within the Authorization header when they attempt to establish a connection to any ws endpoint. It works the same way as the authorization on the http endpoints.<br>
-If a client fails to send a token or sends an invalid one, the handshake fails with 401 code and the connection is not established at all.

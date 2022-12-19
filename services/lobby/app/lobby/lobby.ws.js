@@ -27,7 +27,7 @@ router.ws("/", (connection, req) => {
                 case "close":
                     return await leave_lobby(connection, message.params.lobby_id, user);
                 case "message":
-                    return handleMessageEvent(connection, message, user);
+                    return await handleMessageEvent(connection, message, user);
                 default: 
                     console.error("ws | unknown gateway event: " + message.event + ". Event ignored");
             }
@@ -53,22 +53,78 @@ async function handleMessageEvent(connection, message, user) {
     switch(original_message.action) {
         case "chat":
             return await sendChatMessage(connection, message.params.lobby_id, user, original_message.data);
-        //todo: support some more user interactions within a lobby - e.g. set ready status
+        case "ready": 
+            return await setReady(connection, message.params.lobby_id, user, true);
+        case "unready": 
+            return await setReady(connection, message.params.lobby_id, user, false);
         default:
             debug_log && console.error("ws | unknown action from client: " + original_message.action + ". Ignoring...");
     }
 }
 
+async function setReady(connection, lobby_id, user, status) {
+    let status_changed = await lobbyService.setReady(lobby_id, user.username, status);
+
+    // if status hasn't changed - nothing to do here
+    if (!status_changed)
+        return;
+
+    // if status has changed notify everyone else in the lobby
+    let connected_users = await lobbyService.getConnectedUsers(lobby_id);
+    let users_to_notify = _.filter(connected_users, u => u.username !== user.username);
+    users_to_notify.forEach(u => {
+        connection.send(JSON.stringify({
+            action: "send",
+            user: {
+                username: u.username
+            },
+            data: JSON.stringify({
+                event: status ? "user_ready" : "user_unready",
+                from: user
+            })
+        }));
+    });
+
+    if (!status)
+        return;
+
+    //if status changed to ready, check if everyone is ready and start the game
+    if (status) {
+        if (connected_users.length >= 2 &&
+            connected_users.every(u => u.is_ready)) {
+            // send an http request to Game Service here
+            // for now it's a mock
+            let game_id = Date.now();
+
+            connected_users.forEach(u => {
+                connection.send(JSON.stringify({
+                    action: "send",
+                    user: {
+                        username: u.username
+                    },
+                    data: JSON.stringify({
+                        event: "game_started",
+                        game_id
+                    })
+                }));
+
+                //also unready the user
+                lobbyService.setReady(lobby_id, u.username, false);
+            });
+        }
+    }
+}
+
 async function sendChatMessage(connection, lobby_id, user, data) {
     let connected_users = await lobbyService.getConnectedUsers(lobby_id);
-    connected_users = _.filter(connected_users, u => u !== user.username);
+    connected_users = _.filter(connected_users, u => u.username !== user.username);
 
     //broadcast the chat message to every other user in lobby
     connected_users.forEach(u => {
         connection.send(JSON.stringify({
             action: "send",
             user: {
-                username: u
+                username: u.username
             },
             data: JSON.stringify({
                 event: "chat",
@@ -108,14 +164,14 @@ async function join_lobby(connection, lobby_id, user) {
     //getting all currently connected users to the lobby
     //except the newly connected user
     let users = await lobbyService.getConnectedUsers(lobby_id); //this returns an array of usernames
-    users = _.filter(users, u => u !== user.username);
+    users = _.filter(users, u => u.username !== user.username);
 
     //broadcast the new user connection event to every other user in lobby
     users.forEach(u => {
         connection.send(JSON.stringify({
             action: "send",
             user: {
-                username: u
+                username: u.username
             },
             data: JSON.stringify({
                 event: "user_connected",
@@ -138,7 +194,7 @@ async function leave_lobby(connection, lobby_id, user) {
         connection.send(JSON.stringify({
             action: "send",
             user: {
-                username: u
+                username: u.username
             },
             data: JSON.stringify({
                 event: "user_disconnected",

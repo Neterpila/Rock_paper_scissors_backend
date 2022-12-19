@@ -9,16 +9,15 @@ const expressWs = require('express-ws')(app);
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
 
-//app.use(require('./app/auth/jwt_decoder'));
 app.use(require('./app/auth/user_parser'));
 
-app.use('/lobby', require('./app/lobby/lobby.controller'));
+app.use('/', require('./app/lobby/lobby.controller'));
 
-app.use("/ws", require("./app/lobby/lobby.ws"));
+app.use("/", require("./app/lobby/lobby.ws"));
 
 app.use(require('./app/error/handler'));
 
-const port = process.env.PORT || 3000;
+const port = 8080;
 app.listen(port, () => {
     console.log('Server listening on port ' + port);
 });

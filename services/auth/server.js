@@ -19,7 +19,7 @@ app.get("/health", (req, res) => {
 
 app.use(require("./app/error_handler"));
 
-const port = process.env.PORT || 3002;
+const port = 8080;
 app.listen(port, () => {
     console.log('Server listening on port ' + port);
 });

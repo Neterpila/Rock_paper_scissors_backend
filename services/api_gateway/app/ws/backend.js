@@ -5,13 +5,13 @@ const debug_log = process.env.DEBUG_LOG === "true";
 
 const backends = {
     lobby: {
-        host: "lobby",
-        port: 3000,
-        path: "/ws"
+        host: process.env.LOBBY_SERVICE_HOSTNAME,
+        port: 8080,
+        path: "/"
     }, 
     game: {
-        host: "game",
-        port: 3001,
+        host: process.env.GAME_SERVICE_HOSTNAME,
+        port: 8080,
         path: "/ws" //change endpoint name to the appropriate one
     }
 }
@@ -126,10 +126,9 @@ function handleBackendConnection(service_name, connection) {
     });
 
     connection.on("close", () => {
-        console.log(`The backend ${service_name} closed websocket connection unexpectedly.
-            Attempting to reconnect...`);
+        console.log(`The backend ${service_name} closed websocket connection unexpectedly`);
         delete backend_connections[service_name];
-        connectToBackend(service_name);
+        //connectToBackend(service_name);
     })
 }
 

@@ -3,12 +3,12 @@ const _ = require("lodash");
 
 async function validateToken(token) {
     if (!token)
-        throw new Error("Token is not present");
+        throw new Error("Access token is missing");
 
     token = token.replace(/^Bearer\s+/, "");
     let response;
     try {
-        response = await axios.get("http://auth:3002/validate", {
+        response = await axios.get(`http://${process.env.AUTH_SERVICE_HOSTNAME}:8080/validate`, {
             params: {
                 token
             }
@@ -21,7 +21,7 @@ async function validateToken(token) {
         }
 
         if (e.response.status === 400) 
-            throw new Error((e.response.data && e.response.data.message) ? e.response.data.message : "Token is not valid");
+            throw new Error((e.response.data && e.response.data.message) ? e.response.data.message : "Access token is not valid");
 
         console.error("validator | unexpected response from Auth Service:\n" + e.response);
         throw new Error("", { cause: e });

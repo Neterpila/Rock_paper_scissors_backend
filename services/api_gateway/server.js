@@ -26,12 +26,12 @@ const ws_clients = require("./app/ws/clients");
 ws_backend.init(ws_clients);
 ws_clients.init(ws_backend);
 
-app.use("/ws", ws_clients.router);
+app.use("/", ws_clients.router);
 
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
 
-app.use("/rest", require("./app/http/proxy"));
+app.use("/", require("./app/http/proxy"));
 
 app.get('/health', function(req, res, next){
     res.status(200).send();

@@ -2,57 +2,27 @@ const express = require('express');
 const router = express.Router();
 const axios = require("axios");
 const validator = require("../auth/jwt_validator");
-const util = require('util');
+const fs = require("fs");
+const _ = require("lodash");
 
-const config = {
-    endpoints: [{
-        "endpoint": "/lobby",
-        "method": "get",
-        "backend": {
-            "endpoint": "/lobby",
-            "method": "get",
-            "host": "http://lobby:3000"
-        },
-        "requires_auth": false
-    }, {
-        "endpoint": "/lobby",
-        "method": "post",
-        "backend": {
-            "endpoint": "/lobby/",
-            "method": "post",
-            "host": "http://lobby:3000"
-        },
-        "requires_auth": true
-    }, {
-        "endpoint": "/lobby",
-        "method": "delete",
-        "backend": {
-            "endpoint": "/lobby",
-            "method": "delete",
-            "host": "http://lobby:3000"
-        },
-        "requires_auth": true
-    }, {
-        "endpoint": "/register",
-        "method": "post",
-        "backend": {
-            "endpoint": "/register",
-            "method": "post",
-            "host": "http://auth:3002"
-        },
-        "requires_auth": false
-    }, {
-        "endpoint": "/login",
-        "method": "post",
-        "backend": {
-            "endpoint": "/login",
-            "method": "post",
-            "host": "http://auth:3002"
-        },
-        "requires_auth": false
-    }],
-    backend_timeout: 1500
+let config;
+try {
+    config = fs.readFileSync(__dirname + "/config.json");
+    config = JSON.parse(config);
+} catch (e) {
+    throw new Error("proxy | http config file does not exist or is not valid");
 }
+
+config.endpoints.forEach(endpoint => {
+    let hosts = {
+        lobby: process.env.LOBBY_SERVICE_HOSTNAME,
+        game: process.env.GAME_SERVICE_HOSTNAME,
+        auth: process.env.AUTH_SERVICE_HOSTNAME
+    };
+    _.keys(hosts).forEach(key => {
+        endpoint.backend.host = endpoint.backend.host.replace(`{${key}}`, hosts[key]);
+    });
+});
 
 config.endpoints.forEach(endpoint => {
     router[endpoint.method](endpoint.endpoint, async (req, res, next) => 
@@ -104,7 +74,7 @@ async function handleRequest(backend, requires_auth, req, res, next) {
             console.error("proxy | could not send request to backend:\n" +
                 JSON.stringify(backend) + 
                 "\nwhile proxying request:\n" + 
-                util.inspect(req) +
+                req.method + " " + req.originalUrl +
                 "\nbecause:\n" +
                 e.stack || e.message || e.cause || e);
             return res.status(500).send({ message: "Sorry, something went wrong on the backend" });

@@ -4,8 +4,8 @@ var socket = require('socket.io');
 
 
 var app = express();
-var server = app.listen(3001,function() {
-    console.log('GameServer listening for requests on port 3001');
+var server = app.listen(8080, function() {
+    console.log('GameServer listening for requests on port 8080');
 });
  //Can use path module but bruh
 app.use(express.static('app'));

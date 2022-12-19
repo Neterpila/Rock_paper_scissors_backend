@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express();
 const jwt_validator = require("./app/auth/jwt_validator");
+const bodyParser = require('body-parser');
 
 require('express-ws')(app, null, {
     wsOptions: { 
@@ -25,7 +26,12 @@ const ws_clients = require("./app/ws/clients");
 ws_backend.init(ws_clients);
 ws_clients.init(ws_backend);
 
-app.use("/", ws_clients.router);
+app.use("/ws", ws_clients.router);
+
+app.use(bodyParser.urlencoded({extended: false}));
+app.use(bodyParser.json());
+
+app.use("/rest", require("./app/http/proxy"));
 
 app.get('/health', function(req, res, next){
     res.status(200).send();

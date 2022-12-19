@@ -75,14 +75,30 @@ async function handleRequest(backend, requires_auth, req, res, next) {
         if (user)
             headers.user = JSON.stringify(user);
 
-        response = await axios[backend.method](backend.host + backend.endpoint,
-            req.body,
-            {
-                headers,
-                params: req.query,
-                timeout: config.backend_timeout
-            }    
-        );
+        let req_options = {
+            headers,
+            params: req.query,
+            timeout: config.backend_timeout
+        };
+        switch(backend.method) {
+            // no body can be sent in get method
+            case "get":
+                response = await axios[backend.method](backend.host + backend.endpoint, req_options);
+                break;
+            // in post and patch body must be sent using a separate arg
+            case "post":
+            case "patch":
+                response = await axios[backend.method](backend.host + backend.endpoint, req.body, req_options);
+                break;
+            // delete in axios does not support request body as an arg
+            // so 'data' field in options must be used
+            case "delete":
+                req_options.data = req.body;
+                response = await axios[backend.method](backend.host + backend.endpoint, req_options);
+                break;
+            default:
+                throw new Error("proxy | unsupported backend method: " + backend.method);
+        }
     } catch (e) {
         if (!e.response) {
             console.error("proxy | could not send request to backend:\n" +

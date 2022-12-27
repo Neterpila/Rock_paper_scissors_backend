@@ -90,6 +90,8 @@ services:
 
   swagger:
     container_name: swagger
+    profiles:
+      - swagger
     build: ./services/swagger
     expose:
       - ${SWAGGER_PORT}
@@ -102,6 +104,8 @@ services:
 
   prometheus:
     container_name: prometheus
+    profiles:
+      - monitoring
     image: prom/prometheus
     volumes:
       - ./services/prometheus/config.yml:/etc/prometheus/prometheus.yml:rw
@@ -112,6 +116,8 @@ services:
 
   cadvisor:
     container_name: cadvisor
+    profiles:
+      - monitoring
     image: gcr.io/cadvisor/cadvisor
     ports:
       - ${CADVISOR_PORT}:8080
@@ -125,6 +131,8 @@ services:
 
   grafana:
     container_name: grafana
+    profiles:
+      - monitoring
     image: grafana/grafana
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=grafana_pass
@@ -137,6 +145,8 @@ services:
 
   node-exporter:
     container_name: node_exporter
+    profiles:
+      - monitoring
     image: prom/node-exporter
     ports:
       - ${NODE_EXPORTER_PORT}:9100

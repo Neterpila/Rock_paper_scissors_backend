@@ -1,6 +1,8 @@
 const express = require('express');
 const app = express();
-const jwt_validator = require("./app/jwt_validate");
+const jwt_validator = require("./app/auth/jwt_validator");
+const bodyParser = require('body-parser');
+const cors = require('cors');
 
 require('express-ws')(app, null, {
     wsOptions: { 
@@ -15,6 +17,8 @@ require('express-ws')(app, null, {
     }
 });
 
+app.use(cors({credentials: true, origin: true}));
+
 const ws_backend = require("./app/ws/backend");
 const ws_clients = require("./app/ws/clients");
 
@@ -26,6 +30,11 @@ ws_backend.init(ws_clients);
 ws_clients.init(ws_backend);
 
 app.use("/", ws_clients.router);
+
+app.use(bodyParser.urlencoded({extended: false}));
+app.use(bodyParser.json());
+
+app.use("/", require("./app/http/proxy"));
 
 app.get('/health', function(req, res, next){
     res.status(200).send();

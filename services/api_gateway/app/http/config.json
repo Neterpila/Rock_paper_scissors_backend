@@ -1,0 +1,61 @@
+{
+    "endpoints":
+    [
+        {
+            "endpoint": "/lobby",
+            "method": "get",
+            "backend":
+            {
+                "endpoint": "/",
+                "method": "get",
+                "host": "http://{lobby}:8080"
+            },
+            "requires_auth": false
+        },
+        {
+            "endpoint": "/lobby",
+            "method": "post",
+            "backend":
+            {
+                "endpoint": "/",
+                "method": "post",
+                "host": "http://{lobby}:8080"
+            },
+            "requires_auth": true
+        },
+        {
+            "endpoint": "/lobby",
+            "method": "delete",
+            "backend":
+            {
+                "endpoint": "/",
+                "method": "delete",
+                "host": "http://{lobby}:8080"
+            },
+            "requires_auth": true
+        },
+        {
+            "endpoint": "/register",
+            "method": "post",
+            "backend":
+            {
+                "endpoint": "/register",
+                "method": "post",
+                "host": "http://{auth}:8080"
+            },
+            "requires_auth": false
+        },
+        {
+            "endpoint": "/login",
+            "method": "post",
+            "backend":
+            {
+                "endpoint": "/login",
+                "method": "post",
+                "host": "http://{auth}:8080"
+            },
+            "requires_auth": false
+        }
+    ],
+    "backend_timeout": 1500
+}

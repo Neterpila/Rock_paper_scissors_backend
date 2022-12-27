@@ -53,7 +53,71 @@ Compose services also have configured profiles, which means that not all service
 ## API
 To view http endpoints available to the frontend please visit Swagger.<br>
 Swagger is hosted as a separate service and is available under the 8081 port (unless you specifically changed your docker compose file).<br>
+
 If you run the backend on your local machine, just open your browser of choice and proceed to http://localhost:8081/. Also take note of run options described above.
+
+
+## Docker config info
+All the JS services and SwaggerUI are listening on the 8080 port by default. Mongo listens on it's default 27017 port.<br>
+Those are the ports that the services would request each other by inside the docker network.
+
+In order to send a request from the machine hosting the whole stack some port forwarding had to be made:
+- API Gateway - 8080
+- SwaggerUI - 8081
+- Lobby Service - 3000
+- Game Service - 3001
+- Auth Service - 3002
+- Mongo - 27020
+
+**Examples:**<br>
+The Lobby Service trying to connect to the MongoDB would use a url like this:<br>
+mongodb://db_username:db_password@mongo:27017 - where 'mongo' is the name of a service in compose<br>
+If you're running compose on your local machine and would want to connect to mongo directly (e.g. using a client like Compass), you would use:<br>
+mongodb://db_username:db_password@localhost:27020
+
+API Gateway trying to send a request to Lobby Service would use a url like this:<br>
+GET http://lobby:8080/ - where 'lobby' is the name of a service in compose<br>
+If you would want to request Lobby Service directly for debug reasons, you would use:<br>
+GET http://localhost:3000/
+
+## Monitoring
+As monitoring/alerting tools this project uses:
+- cAdvisor - provides container specific metrics
+- Node-Exporter - provides host specific metrics
+- Prometheus - collects metrics data
+- Loki - aggregates logs from other containers, stores and indexes them
+- Promtail - scrapes logs and actually stores them in Loki
+- Grafana - used to visualize metrics sourced from Prometheus as well as allows querying logs from Loki
+
+> Current compose config as well as other metric-collecting services' configs were created with a unix host in mind. Current configuration works fine on a MacOS with Docker Desktop for Mac and will *probably* work fine on another *nix system with Docker. Some monitoring services/functinality may or may not work on a Windows machine. This requires further testing/adjustments.
+
+Grafana is available on a 8090 port. Currently it only has one admin user whose password can be looked up in envs passed to Grafana service (in compose file). Upon entering you should be able to view a single existing dashboard (Dashboards -> Browse -> General -> Metrics). It should look something like this:<br>
+![Grafana dashboard](./misc/grafana_example.jpeg)
+
+As for logs - those can be queried with Grafana in Explore section (be sure to select Loki as datasource) or from Loki itself which is available on 8094 on the host machine.
+
+## Docker config info
+All the JS services and SwaggerUI are listening on the 8080 port by default. Mongo listens on it's default 27017 port.<br>
+Those are the ports that the services would request each other by inside the docker network.
+
+In order to send a request from the machine hosting the whole stack some port forwarding had to be made:
+- API Gateway - 8080
+- SwaggerUI - 8081
+- Lobby Service - 3000
+- Game Service - 3001
+- Auth Service - 3002
+- Mongo - 27020
+
+**Examples:**<br>
+The Lobby Service trying to connect to the MongoDB would use a url like this:<br>
+mongodb://db_username:db_password@mongo:27017 - where 'mongo' is the name of a service in compose<br>
+If you're running compose on your local machine and would want to connect to mongo directly (e.g. using a client like Compass), you would use:<br>
+mongodb://db_username:db_password@localhost:27020
+
+API Gateway trying to send a request to Lobby Service would use a url like this:<br>
+GET http://lobby:8080/ - where 'lobby' is the name of a service in compose<br>
+If you would want to request Lobby Service directly for debug reasons, you would use:<br>
+GET http://localhost:3000/
 
 
 ## Docker config info

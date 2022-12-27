@@ -72,4 +72,49 @@ If there are other users in the same lobby as you are, they will receive the fol
 - data field contains the message itself
 
 ### Ready checking
-*not implemented yet*
+In order to start a game both users in a lobby must first let the backend (and each other) know that they are ready.<br>
+In order to do that you should send the following message to the connection.
+```json
+{
+    "action": "ready"
+}
+```
+
+Other user in the lobby will recieve a message like this:
+```json
+{
+    "event": "user_ready",
+    "from": {
+        "username": "the_dude_lebowski"
+    }
+}
+```
+
+If you've changed your mind you can also unready:
+```json
+{
+    "action": "unready"
+}
+```
+
+And other user will also know about it:
+```json
+{
+    "event": "user_unready",
+    "from": {
+        "username": "the_dude_lebowski"
+    }
+}
+```
+
+### Starting a game
+
+In case both users in the lobby are ready, the game is started. Both clients will receive the following message:
+```json
+{
+    "event": "game_started",
+    "game_id": "09822321eafc30d85d48aa1a"
+}
+```
+
+The clients should than take this game id and open a new connection to another WebSocket endpoint. You can find more info on how to connect and what to do an that endpoint [here](../game/).

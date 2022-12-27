@@ -8,3 +8,6 @@ services/**/node_modules
 # db
 services/mongodb/data
 **/.DS_Store
+
+# logs
+services/loki/data

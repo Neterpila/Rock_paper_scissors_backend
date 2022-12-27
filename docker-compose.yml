@@ -1,6 +1,8 @@
 version: "3"
+name: rock_paper_scissors
 services:
   mongodb:
+    container_name: mongodb
     image: mongo:5.0
     ports:
       - "${MONGO_PORT}:27017"
@@ -15,6 +17,7 @@ services:
       - '/dev/null'
 
   auth:
+    container_name: auth
     build: ./services/auth
     ports: 
       - "3002:8080"
@@ -35,6 +38,7 @@ services:
       retries: 3
 
   api_gateway:
+    container_name: api_gateway
     build: ./services/api_gateway
     ports: 
       - "${GATEWAY_PORT}:8080"
@@ -51,6 +55,7 @@ services:
       # todo: add a healthchek for game and another condition
       
   lobby:
+    container_name: lobby
     build: ./services/lobby
     ports: 
       - "${LOBBY_PORT}:8080"
@@ -71,6 +76,7 @@ services:
       retries: 3
   
   game:
+    container_name: game
     build: ./services/game
     ports: 
       - "${GAME_PORT}:8080"
@@ -84,6 +90,9 @@ services:
       - mongodb
 
   swagger:
+    container_name: swagger
+    profiles:
+      - swagger
     build: ./services/swagger
     expose:
       - ${SWAGGER_PORT}
@@ -93,3 +102,73 @@ services:
       - api_gateway
     environment:
       - SWAGGER_JSON=/swagger.yaml
+
+  prometheus:
+    container_name: prometheus
+    profiles:
+      - monitoring
+    image: prom/prometheus
+    volumes:
+      - ./services/prometheus/config.yml:/etc/prometheus/prometheus.yml:rw
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    ports:
+      - ${PROMETHEUS_PORT}:9090
+
+  cadvisor:
+    container_name: cadvisor
+    profiles:
+      - monitoring
+    image: gcr.io/cadvisor/cadvisor
+    ports:
+      - ${CADVISOR_PORT}:8080
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /var/run/docker.sock:/var/run/docker.sock:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+
+  grafana:
+    container_name: grafana
+    profiles:
+      - monitoring
+    image: grafana/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=grafana_pass
+    volumes:
+      - ./services/grafana/data:/var/lib/grafana:rw
+      - ./services/grafana/datasources:/etc/grafana/provisioning/datasources
+    depends_on:
+      - prometheus
+    ports:
+      - ${GRAFANA_PORT}:3000
+
+  node-exporter:
+    container_name: node_exporter
+    profiles:
+      - monitoring
+    image: prom/node-exporter
+    ports:
+      - ${NODE_EXPORTER_PORT}:9100
+
+  loki:
+    container_name: loki
+    profiles:
+      - monitoring
+    image: grafana/loki
+    ports:
+      - "${LOKI_PORT}:3100"
+    volumes:
+      - ./services/loki/data:/loki
+
+  promtail:
+    container_name: promtail
+    profiles:
+      - monitoring
+    image: grafana/promtail
+    volumes:
+      - ./services/promtail/config.yaml:/etc/promtail/config.yml
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro

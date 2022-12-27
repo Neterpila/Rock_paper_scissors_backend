@@ -14,8 +14,8 @@ Backend consists of several microservices each run in docker using compose. This
 
 Planned services:
 - Game Service - a service that manages the game, saves the players' choices and provides the player with the choice of another player in a given round.
-- Lobby Service - a service that allows you to get open lobbies that you can join, connect or create your own lobby.
-- API Gateway - mainly going to deal with authorization and routing
+- Lobby Service - a service that allows browsing lobbies, creating own lobbies, connecting, as well as manages other in-lobby activities 
+- API Gateway - mainly deals with authorization and routing
 
 Users will use the mobile/web application.
 
@@ -24,7 +24,10 @@ Technologies:
 - Express, WS - libraries for HTTP/WebSocket servers
 - MongoDB - a database for storing users and common information about games
 - Mongoose - a library to connect to the database from microservices
-- Flutter - a set of tools designed to create native applications for various platforms
+- cAdvisor, Node-Exported, Prometheus - tools for collecting container and system metrics
+- Loki, Promtail - tools for aggregating and indexing services' logs
+- Grafana - a tool for visualizing the collected metrics
+- Flutter - a set of tools designed to create native applications for various platforms (frontend app)
 
 
 ## How to run the backend?
@@ -34,6 +37,12 @@ Technologies:
 4. In project directory run `docker-compose up --build`.
 5. You now have everything set up (at least in theory). Try to make a request to one of the services using apps such as Postman (or a browser of your choice
 
+Compose services also have configured profiles, which means that not all services will be run by default.<br>
+`docker compose up` will only run the core backend services without any additional stuff. Those are: MongoDB, Lobby, Game, Auth, Gateway. If you want to also enable monitoring and/or SwaggerUI you'll need to use profiles.
+
+`docker compose --profile monitoring up` apart from core services will also run cAdvisor, Node-Exported, Prometheus, Loki, Promtail and Grafana.<br>
+`docker compose --profile swagger up` apart from core services will also run SwaggerUI.<br>
+`docker compose --profile monitoring --profile swagger up` will run everything there is.
 
 ## How to contribute?
 1. Create a branch for a feature you want to add
@@ -44,7 +53,7 @@ Technologies:
 ## API
 To view http endpoints available to the frontend please visit Swagger.<br>
 Swagger is hosted as a separate service and is available under the 8081 port (unless you specifically changed your docker compose file).<br>
-If you run the backend on your local machine, just open your browser of choice and proceed to http://localhost:8081/
+If you run the backend on your local machine, just open your browser of choice and proceed to http://localhost:8081/. Also take note of run options described above.
 
 
 ## Docker config info
@@ -70,6 +79,21 @@ GET http://lobby:8080/ - where 'lobby' is the name of a service in compose<br>
 If you would want to request Lobby Service directly for debug reasons, you would use:<br>
 GET http://localhost:3000/
 
+## Monitoring
+As monitoring/alerting tools this project uses:
+- cAdvisor - provides container specific metrics
+- Node-Exporter - provides host specific metrics
+- Prometheus - collects metrics data
+- Loki - aggregates logs from other containers, stores and indexes them
+- Promtail - scrapes logs and actually stores them in Loki
+- Grafana - used to visualize metrics sourced from Prometheus as well as allows querying logs from Loki
+
+> Current compose config as well as other metric-collecting services' configs were created with a unix host in mind. Current configuration works fine on a MacOS with Docker Desktop for Mac and will *probably* work fine on another *nix system with Docker. Some monitoring services/functinality may or may not work on a Windows machine. This requires further testing/adjustments.
+
+Grafana is available on a 8090 port. Currently it only has one admin user whose password can be looked up in envs passed to Grafana service (in compose file). Upon entering you should be able to view a single existing dashboard (Dashboards -> Browse -> General -> Metrics). It should look something like this:<br>
+![Grafana dashboard](./misc/grafana_example.jpeg)
+
+As for logs - those can be queried with Grafana in Explore section (be sure to select Loki as datasource) or from Loki itself which is available on 8094 on the host machine.
 
 ## Useful resources
 Docker overview

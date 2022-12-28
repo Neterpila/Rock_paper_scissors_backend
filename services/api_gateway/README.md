@@ -8,7 +8,7 @@ Backend offers functionality both over HTTP and WebSocket.
 The backend uses JWT as an authorization method. Clients are expected to send their tokens within the Authorization header when they attempt to use a protected endpoint.
 
 # HTTP
-For available http endpoints that you can use as a client please visit SwaggerUI. Information on how to get there you can find [here](../../#api)
+For available http endpoints that you can use as a client please visit SwaggerUI. Information on how to get there you can find [here](/#api)
 
 In case of HTTP endpoints the gateway serves as a rather simple proxy that verifies the validity of the JWT token (where it is required) and responds with 401 if it's not. If the token is valid though, it simply sends the request further to a backend service and responds with it's response.
 

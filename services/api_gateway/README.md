@@ -43,7 +43,7 @@ Therefore the gateway can identify every client connection by:
 
 ## Implementation
 After considering everything explained in the previous chapter the following concept emerges:<br><br>
-![WS Gateway architecture](../../misc/ws_gateway.jpeg)
+![WS Gateway architecture](../../misc/img/ws_gateway.jpeg)
 <br><br>
 Takeaways:
 - gateway keeps one WS connection at all times to any backend service

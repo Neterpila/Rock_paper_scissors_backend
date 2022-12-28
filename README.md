@@ -10,7 +10,7 @@ Backend consists of several microservices each run in docker using compose. This
 ## Architecture and description
 *Things you are gonna read down below might be a subject for constant change*
 
-![Project architecture](./misc/architecture.jpeg)
+![Project architecture](./misc/img/architecture.jpeg)
 
 Planned services:
 - Game Service - a service that manages the game, saves the players' choices and provides the player with the choice of another player in a given round.
@@ -92,7 +92,7 @@ As monitoring/alerting tools this project uses:
 > Current compose config as well as other metric-collecting services' configs were created with a unix host in mind. Current configuration works fine on a MacOS with Docker Desktop for Mac and will *probably* work fine on another *nix system with Docker. Some monitoring services/functinality may or may not work on a Windows machine. This requires further testing/adjustments.
 
 Grafana is available on a 8090 port. Currently it only has one admin user whose password can be looked up in envs passed to Grafana service (in compose file). Upon entering you should be able to view a single existing dashboard (Dashboards -> Browse -> General -> Metrics). It should look something like this:<br>
-![Grafana dashboard](./misc/grafana_example.jpeg)
+![Grafana dashboard](./misc/img/grafana_example.jpeg)
 
 As for logs - those can be queried with Grafana in Explore section (be sure to select Loki as datasource) or from Loki itself which is available on 8094 on the host machine.
 

@@ -106,14 +106,21 @@ async function saveChoiceAndMakeTurn(username,id,choice) {
     return user;
 }
 
-async function endTurn(id) {
+async function endTurn(id,currRound,winnerOfRound) {
     let game = await Game.findById(id);
     game.users.forEach(user => {
         user.yourTurn = true;
         user.choice = "";
     })
+    game.gameHistory.push({round : currRound,winner: winnerOfRound})
     game.save();
 
+}
+
+async function endGame(id,theWinnerOfGame) {
+    let game = await Game.findById(id);
+    game.winnerOfGame = theWinnerOfGame;
+    game.save();
 }
 
 async function validateChoice(choice) {
@@ -143,5 +150,5 @@ async function getRoundLimit(id) {
 
 
 
-module.exports = {create,get,saveChoiceAndMakeTurn, remove, join,findById, leave, 
+module.exports = {create,get,saveChoiceAndMakeTurn, remove, join,findById, leave,endGame, 
     getConnectedUsers, clearConnectedUsers,addPoint,addRound,endTurn,getCurrentRound,getRoundLimit,validateChoice};

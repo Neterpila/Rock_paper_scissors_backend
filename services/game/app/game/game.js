@@ -10,7 +10,14 @@ const Game = new Schema ({
         yourTurn: { type: Boolean, default: true },
         score:    {type: Number, default: 0},
         choice: {type: String, default: ""}
-    } ]
+    } ],
+
+    gameHistory: [ {
+        round : { type: String},
+        winner: {type: String, default: "draw"}
+    } ],
+
+    winnerOfGame: {type:String, default: "draw"}
 
 });
 

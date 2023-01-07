@@ -45,6 +45,21 @@ router.ws("/game", (connection, req) => {
 
 async function makeMove(connection, gameId,message, user) {
 
+    if(await gameService.getCurrentRound(gameId) > await gameService.getRoundLimit(gameId)){
+        console.log("Game is Closed, Create New One");
+        connection.send(JSON.stringify({
+            action: "send",
+            user: {
+                username: player.username
+            },
+            data: JSON.stringify({
+                event: "GameClosed",
+            })
+        }));
+        return await leave_game(connection, gameId, user);
+    }
+
+
     playerUsername = user.username
     let connected_users = await gameService.getConnectedUsers(gameId);
     let player = connected_users.filter(player => {
@@ -129,13 +144,13 @@ async function makeMove(connection, gameId,message, user) {
                 })
             }));
             
-            gameService.endTurn(gameId);
+            gameService.endTurn(gameId,currRound);
             gameService.addRound(gameId);
         } else {
             winner = await gameService.addPoint(gameId,winner.username);
             let loser = winner.username === player.username ? opponent : player;
 
-            gameService.endTurn(gameId)
+            gameService.endTurn(gameId,currRound,winner);
 
             connection.send(JSON.stringify({
                 action: "send",
@@ -167,8 +182,62 @@ async function makeMove(connection, gameId,message, user) {
             //TODO check if gameEnded 
             //TODO save gameHistory
             
-            if(gameService.getCurrentRound(gameId.valueOf()) >= gameService.getRoundLimit(gameId.valueOf())) {
+            if(await gameService.getCurrentRound(gameId) >= await gameService.getRoundLimit(gameId)) {
+
+                
+
                 console.log("Game ended !");
+                if(winner.score === loser.score) {
+                    
+                    connection.send(JSON.stringify({
+                        action: "send",
+                        user: {
+                            username: loser.username
+                        },
+                        data: JSON.stringify({
+                            event: "GameEnded",
+                            gameState: "draw"
+                        })
+                    }));
+
+                    connection.send(JSON.stringify({
+                        action: "send",
+                        user: {
+                            username: winner.username
+                        },
+                        data: JSON.stringify({
+                            event: "GameEnded",
+                            gameState: "draw"
+                        })
+                    }));
+
+                    await gameService.endGame(gameId,"draw");
+                } else {
+                    winnerOfTheGame = winner.score > loser.score ? winner : loser;
+
+                    connection.send(JSON.stringify({
+                        action: "send",
+                        user: {
+                            username: loser.username
+                        },
+                        data: JSON.stringify({
+                            event: "GameEnded",
+                            gameState: "lost"
+                        })
+                    }));
+
+                    connection.send(JSON.stringify({
+                        action: "send",
+                        user: {
+                            username: winner.username
+                        },
+                        data: JSON.stringify({
+                            event: "GameEnded",
+                            gameState: "won"
+                        })
+                    }));
+                    await gameService.endGame(gameId,winner);
+                }
             }
             gameService.addRound(gameId);
         } 
@@ -189,6 +258,22 @@ async function makeMove(connection, gameId,message, user) {
 
 
 async function join_game(connection, id, user) {
+    //Check if Game was played 
+
+    if(await gameService.getCurrentRound(id) > await gameService.getRoundLimit(id)){
+        console.log("Game is Closed, Create New One");
+        connection.send(JSON.stringify({
+            action: "send",
+            user: {
+                username: player.username
+            },
+            data: JSON.stringify({
+                event: "GameClosed",
+            })
+        }));
+        return await leave_game(connection, gameId, user);
+    }
+
     try {
         //attempt to save the info about newly connected user to db
         await gameService.join(id, user);

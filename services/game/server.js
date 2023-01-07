@@ -1,26 +1,29 @@
-var express = require('express');
-var socket = require('socket.io');
+const express = require('express');
+const bodyParser = require('body-parser');
+
+const db = require('./db');
+
+const app = express();
+const expressWs = require('express-ws')(app);
+
+app.use(bodyParser.urlencoded({extended: false}));
+app.use(bodyParser.json());
+
+app.use(require('./app/auth/user_parser'));
 
 
+app.use("/", require("./app/game/game.ws"));
 
-var app = express();
-var server = app.listen(8080, function() {
-    console.log('GameServer listening for requests on port 8080');
+app.use("/", require("./app/game/game.http"));
+
+app.use(require('./app/error/handler'));
+
+const port = 8080;
+app.listen(port, () => {
+    console.log('Server listening on port ' + port);
 });
- //Can use path module but bruh
-app.use(express.static('app'));
 
-
-
-var io = socket(server);
-io.on('connection',(socket) => {
-
-    console.log('Made socket connection',socket.id);
-
-    socket.on('communicat',(decision) => {
-        io.sockets.emit('communicat',decision);
-    });
-
-
+app.use('/health', async (req, res) => {
+    res.status(200).send();
 });
 

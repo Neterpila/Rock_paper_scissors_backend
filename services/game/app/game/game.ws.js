@@ -53,7 +53,23 @@ async function makeMove(connection, gameId,message, user) {
     let opponent = _.filter(connected_users, function(u) { 
         if (u.username != playerUsername) return u; 
      })[0];
-    var message = JSON.parse(message);
+
+    var message = await JSON.parse(message);
+    choiceValid = await gameService.validateChoice(message.choice);
+    if( !choiceValid ) {
+        console.log("UNVALID CHOISE!!");
+        connection.send(JSON.stringify({
+            action: "send",
+            user: {
+                username: player.username
+            },
+            data: JSON.stringify({
+                event: "UnvalidChoice",
+                playerChoice: player.choice,
+            })
+        }));
+        return;
+    }
 
     if(player.yourTurn === false) {
         connection.send(JSON.stringify({
@@ -62,7 +78,7 @@ async function makeMove(connection, gameId,message, user) {
                 username: player.username
             },
             data: JSON.stringify({
-                event: "MovieMade",
+                event: "Move_already_made",
                 playerChoice: player.choice,
             })
         }));
@@ -71,12 +87,9 @@ async function makeMove(connection, gameId,message, user) {
     
     console.log("choice is " + message.choice);
     
-    gameService.saveChoiceAndMakeTurn(player.username,gameId,message.choice);
-    //update Player
-    player = connected_users.filter(player => {
-        return player.username === playerUsername
-    })[0];
-    player.choice = message.choice;
+    player = await gameService.saveChoiceAndMakeTurn(player.username,gameId,message.choice);
+
+    currRound = await gameService.getCurrentRound(gameId);
 
 
     if (opponent.choice !== "") {
@@ -98,8 +111,8 @@ async function makeMove(connection, gameId,message, user) {
                     event: "roundEnded",
                     state: "draw",
                     opponentChoice: opponent.choice,
-                    score: player.score,
-                    currentRound: gameService.getCurrentRound(gameId)
+                    score: player.score + " : " + opponent.score,
+                    currentRound: currRound
                 })
             }));
             connection.send(JSON.stringify({
@@ -111,16 +124,17 @@ async function makeMove(connection, gameId,message, user) {
                     event: "roundEnded",
                     state: "draw",
                     opponentChoice: player.choice,
-                    score: opponent.score,
-                    currentRound: gameService.getCurrentRound(gameId) 
+                    score: opponent.score + " : " + player.score,
+                    currentRound: currRound
                 })
             }));
-            gameService.endTurn(gameId)
-        } else {
-
-            gameService.addPointRoundCounter(gameId,winner.username);
             
-            let loser = winner === user ? opponent : user;
+            gameService.endTurn(gameId);
+            gameService.addRound(gameId);
+        } else {
+            winner = await gameService.addPoint(gameId,winner.username);
+            let loser = winner.username === player.username ? opponent : player;
+
             gameService.endTurn(gameId)
 
             connection.send(JSON.stringify({
@@ -131,9 +145,9 @@ async function makeMove(connection, gameId,message, user) {
                 data: JSON.stringify({
                     event: "roundEnded",
                     state: "win",
-                    opponentChoice: opponent.choice,
-                    score: winner.score,
-                    currentRound: gameService.getCurrentRound(gameId)
+                    opponentChoice: loser.choice,
+                    score: winner.score + " : " + loser.score,
+                    currentRound: currRound
                 })
             }));
             
@@ -145,20 +159,31 @@ async function makeMove(connection, gameId,message, user) {
                 data: JSON.stringify({
                     event: "roundEnded",
                     state: "lose",
-                    opponentChoice: player.choice,
-                    score: loser.score,
-                    currentRound: gameService.getCurrentRound(gameId)
+                    opponentChoice: winner.choice,
+                    score: loser.score + " : " + winner.score ,
+                    currentRound: currRound
                 })
             }));
-            //TODO check if gameEnded
+            //TODO check if gameEnded 
             //TODO save gameHistory
-            if(gameService.getCurrentRound(gameId) >= gameService.getRoundLimit(gameId)) {
+            
+            if(gameService.getCurrentRound(gameId.valueOf()) >= gameService.getRoundLimit(gameId.valueOf())) {
                 console.log("Game ended !");
             }
-
-        }
-        
-        
+            gameService.addRound(gameId);
+        } 
+    } else {
+        connection.send(JSON.stringify({
+            action: "send",
+            user: {
+                username: player.username
+            },
+            data: JSON.stringify({
+                event: "Move_made",
+                playerChoice: player.choice,
+            })
+        }));
+        return;
     }
 };
 

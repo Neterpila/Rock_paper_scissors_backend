@@ -80,15 +80,19 @@ async function clearConnectedUsers() {
 
 }
 
-async function addPointRoundCounter(id,username) {
+async function addPoint(id,username) {
     let game = await Game.findById(id);
     user = game.users.filter(user => {
         return user.username === username
     })[0];
     user.score++;
+    await game.save();
+    return user;
+}
+async function addRound(id) {
+    let game = await Game.findById(id);
     game.currentRound++;
-    game.save();
-
+    await game.save();
 }
 
 async function saveChoiceAndMakeTurn(username,id,choice) {
@@ -98,7 +102,8 @@ async function saveChoiceAndMakeTurn(username,id,choice) {
     })[0];
     user.choice = choice;
     user.yourTurn = false;
-    game.save();
+    await game.save();
+    return user;
 }
 
 async function endTurn(id) {
@@ -108,6 +113,13 @@ async function endTurn(id) {
         user.choice = "";
     })
     game.save();
+
+}
+
+async function validateChoice(choice) {
+    if(choice === "paper" || choice ==="rock" || choice ==="scissors"){
+        return true;
+    }else return false;
 
 }
 
@@ -132,4 +144,4 @@ async function getRoundLimit(id) {
 
 
 module.exports = {create,get,saveChoiceAndMakeTurn, remove, join,findById, leave, 
-    getConnectedUsers, clearConnectedUsers,addPointRoundCounter,endTurn,getCurrentRound,getRoundLimit};
+    getConnectedUsers, clearConnectedUsers,addPoint,addRound,endTurn,getCurrentRound,getRoundLimit,validateChoice};

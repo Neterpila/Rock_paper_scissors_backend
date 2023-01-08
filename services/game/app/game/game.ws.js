@@ -3,7 +3,6 @@ const expressWs = require('express-ws')(express);
 const router = express.Router();
 const gameService = require('./game.service');
 const _ = require('lodash');
-const game = require('./game');
 const debug_log = process.env.DEBUG_LOG === "true";
 
 gameService.clearConnectedUsers();
@@ -27,7 +26,7 @@ router.ws("/game", (connection, req) => {
                 case "close":
                     return await leave_game(connection, message.params.game_id, user);
                 case "message":
-                    return await makeMove(connection, message.params.game_id,message.data, user);
+                    return await processClientMessage(connection, message.params.game_id,message.data, user);
                 default: 
                     console.error("ws | unknown gateway event: " + message.event + ". Event ignored");
             }
@@ -41,22 +40,30 @@ router.ws("/game", (connection, req) => {
     });
 });
 
+async function processClientMessage(connection, gameId, message, user) {
+    //if the client message is not a json or is not a move - then ignore
+    try {
+        message = await JSON.parse(message);
+    } catch (e) {};
+    if (message.action === "move")
+        await makeMove(connection, gameId, message.data, user);
+}
 
-
-async function makeMove(connection, gameId,message, user) {
+async function makeMove(connection, gameId, move, user) {
 
     if(await gameService.getCurrentRound(gameId) > await gameService.getRoundLimit(gameId)){
         console.log("Game is Closed, Create New One");
         connection.send(JSON.stringify({
             action: "send",
-            user: {
-                username: player.username
-            },
+            user,
             data: JSON.stringify({
-                event: "GameClosed",
+                event: "game_closed",
             })
         }));
-        return await leave_game(connection, gameId, user);
+        return connection.send(JSON.stringify({
+            action: "close",
+            user
+        }));
     }
 
 
@@ -69,8 +76,18 @@ async function makeMove(connection, gameId,message, user) {
         if (u.username != playerUsername) return u; 
      })[0];
 
-    var message = await JSON.parse(message);
-    choiceValid = await gameService.validateChoice(message.choice);
+    if (!opponent) {
+        return connection.send(JSON.stringify({
+            action: "send",
+            user,
+            data: JSON.stringify({
+                event: "opponent_missing",
+                message: "Opponent has not yet joined the game, please wait"
+            })
+        }));
+    }
+
+    choiceValid = await gameService.validateChoice(move);
     if( !choiceValid ) {
         console.log("UNVALID CHOISE!!");
         connection.send(JSON.stringify({
@@ -79,8 +96,10 @@ async function makeMove(connection, gameId,message, user) {
                 username: player.username
             },
             data: JSON.stringify({
-                event: "UnvalidChoice",
-                playerChoice: player.choice,
+                event: "invalid_choice",
+                data: {
+                    move: player.choice
+                }
             })
         }));
         return;
@@ -93,16 +112,18 @@ async function makeMove(connection, gameId,message, user) {
                 username: player.username
             },
             data: JSON.stringify({
-                event: "Move_already_made",
-                playerChoice: player.choice,
+                event: "move_already_made",
+                data: {
+                    move: player.choice
+                }
             })
         }));
         return;
     }
     
-    console.log("choice is " + message.choice);
+    console.log("choice is " + move);
     
-    player = await gameService.saveChoiceAndMakeTurn(player.username,gameId,message.choice);
+    player = await gameService.saveChoiceAndMakeTurn(player.username,gameId,move);
 
     currRound = await gameService.getCurrentRound(gameId);
 
@@ -123,11 +144,13 @@ async function makeMove(connection, gameId,message, user) {
                     username: player.username
                 },
                 data: JSON.stringify({
-                    event: "roundEnded",
-                    state: "draw",
-                    opponentChoice: opponent.choice,
-                    score: player.score + " : " + opponent.score,
-                    currentRound: currRound
+                    event: "round_ended",
+                    data: {
+                        state: "draw",
+                        opponent_move: opponent.choice,
+                        score: player.score + " : " + opponent.score,
+                        current_round: currRound
+                    }
                 })
             }));
             connection.send(JSON.stringify({
@@ -136,11 +159,13 @@ async function makeMove(connection, gameId,message, user) {
                     username: opponent.username
                 },
                 data: JSON.stringify({
-                    event: "roundEnded",
-                    state: "draw",
-                    opponentChoice: player.choice,
-                    score: opponent.score + " : " + player.score,
-                    currentRound: currRound
+                    event: "round_ended",
+                    data: {
+                        state: "draw",
+                        opponent_move: player.choice,
+                        score: player.score + " : " + opponent.score,
+                        current_round: currRound
+                    }
                 })
             }));
             
@@ -158,11 +183,13 @@ async function makeMove(connection, gameId,message, user) {
                     username: winner.username
                 },
                 data: JSON.stringify({
-                    event: "roundEnded",
-                    state: "win",
-                    opponentChoice: loser.choice,
-                    score: winner.score + " : " + loser.score,
-                    currentRound: currRound
+                    event: "round_ended",
+                    data: {
+                        state: "win",
+                        opponent_move: loser.choice,
+                        score: winner.score + " : " + loser.score,
+                        current_round: currRound
+                    }
                 })
             }));
             
@@ -172,11 +199,13 @@ async function makeMove(connection, gameId,message, user) {
                     username: loser.username
                 },
                 data: JSON.stringify({
-                    event: "roundEnded",
-                    state: "lose",
-                    opponentChoice: winner.choice,
-                    score: loser.score + " : " + winner.score ,
-                    currentRound: currRound
+                    event: "round_ended",
+                    data: {
+                        state: "lose",
+                        opponent_move: winner.choice,
+                        score: loser.score + " : " + winner.score,
+                        current_round: currRound
+                    }
                 })
             }));
             //TODO check if gameEnded 
@@ -195,8 +224,10 @@ async function makeMove(connection, gameId,message, user) {
                             username: loser.username
                         },
                         data: JSON.stringify({
-                            event: "GameEnded",
-                            gameState: "draw"
+                            event: "game_ended",
+                            data: {
+                                state: "draw"
+                            }
                         })
                     }));
 
@@ -206,37 +237,44 @@ async function makeMove(connection, gameId,message, user) {
                             username: winner.username
                         },
                         data: JSON.stringify({
-                            event: "GameEnded",
-                            gameState: "draw"
+                            event: "game_ended",
+                            data: {
+                                state: "draw"
+                            }
                         })
                     }));
 
                     await gameService.endGame(gameId,"draw");
                 } else {
-                    winnerOfTheGame = winner.score > loser.score ? winner : loser;
+                    game_winner = winner.score > loser.score ? winner : loser;
+                    game_loser = winner.username === game_winner.username ? loser : winner;
 
                     connection.send(JSON.stringify({
                         action: "send",
                         user: {
-                            username: loser.username
+                            username: game_loser.username
                         },
                         data: JSON.stringify({
-                            event: "GameEnded",
-                            gameState: "lost"
+                            event: "game_ended",
+                            data: {
+                                state: "lost"
+                            }
                         })
                     }));
 
                     connection.send(JSON.stringify({
                         action: "send",
                         user: {
-                            username: winner.username
+                            username: game_winner.username
                         },
                         data: JSON.stringify({
-                            event: "GameEnded",
-                            gameState: "won"
+                            event: "game_ended",
+                            data: {
+                                state: "won"
+                            }
                         })
                     }));
-                    await gameService.endGame(gameId,winner);
+                    await gameService.endGame(gameId,game_winner);
                 }
             }
             gameService.addRound(gameId);
@@ -248,8 +286,10 @@ async function makeMove(connection, gameId,message, user) {
                 username: player.username
             },
             data: JSON.stringify({
-                event: "Move_made",
-                playerChoice: player.choice,
+                event: "move_made",
+                data: {
+                    move: player.choice
+                }
             })
         }));
         return;

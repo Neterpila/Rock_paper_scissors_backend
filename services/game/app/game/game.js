@@ -3,7 +3,7 @@ const Schema = mongoose.Schema;
 
 const Game = new Schema ({
     
-    roundLimit : {type: Number},
+    roundLimit : {type: Number, default: 10},
     currentRound: {type: Number , default: 1},
     users: [ {
         username: { type: String },

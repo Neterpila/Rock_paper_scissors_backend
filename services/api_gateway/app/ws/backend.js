@@ -12,7 +12,7 @@ const backends = {
     game: {
         host: process.env.GAME_SERVICE_HOSTNAME,
         port: 8080,
-        path: "/ws" //change endpoint name to the appropriate one
+        path: "/game"
     }
 }
 let backend_connections = {};
@@ -83,7 +83,7 @@ const connectToBackend = (name, retries = 3) => {
 
 function init(ws_clients) {
     connectToBackend("lobby");
-    //connectToBackend("game");
+    connectToBackend("game");
     Clients = ws_clients;
 }
 

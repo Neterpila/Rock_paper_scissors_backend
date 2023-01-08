@@ -86,6 +86,7 @@ services:
       - MONGO_DB=${MONGO_DB}
       - MONGO_USERNAME=${MONGO_USERNAME}
       - MONGO_PASSWORD=${MONGO_PASSWORD}
+      - DEBUG_LOG=true
     depends_on:
       - mongodb
 

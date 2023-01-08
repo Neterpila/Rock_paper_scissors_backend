@@ -119,7 +119,7 @@ async function endTurn(id,currRound,winnerOfRound) {
 
 async function endGame(id,theWinnerOfGame) {
     let game = await Game.findById(id);
-    game.winnerOfGame = theWinnerOfGame;
+    game.winnerOfGame = theWinnerOfGame.username || theWinnerOfGame;
     game.save();
 }
 

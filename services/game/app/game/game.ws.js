@@ -43,7 +43,7 @@ router.ws("/game", (connection, req) => {
 async function processClientMessage(connection, gameId, message, user) {
     //if the client message is not a json or is not a move - then ignore
     try {
-        message = await JSON.parse(message);
+        message = JSON.parse(message);
     } catch (e) {};
     if (message.action === "move")
         await makeMove(connection, gameId, message.data, user);

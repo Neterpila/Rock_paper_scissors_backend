@@ -3,6 +3,7 @@ const expressWs = require('express-ws')(express);
 const router = express.Router();
 const lobbyService = require('./lobby.service');
 const _ = require('lodash');
+const axios = require("axios");
 const debug_log = process.env.DEBUG_LOG === "true";
 
 // purge all connected users from db when the server starts
@@ -93,8 +94,16 @@ async function setReady(connection, lobby_id, user, status) {
         if (connected_users.length >= 2 &&
             connected_users.every(u => u.is_ready)) {
             // send an http request to Game Service here
-            // for now it's a mock
-            let game_id = Date.now();
+            let game_id;
+            try {
+                response = await axios.post(`http://${process.env.GAME_SERVICE_HOSTNAME}:8080`);
+                if (!response.data || !response.data._id) {
+                    throw new Error("No _id field is present in the response from the Game service");
+                }
+                game_id = response.data._id;
+            } catch (err) {
+                throw new Error("Could not create a new game", err);
+            }
 
             connected_users.forEach(u => {
                 connection.send(JSON.stringify({

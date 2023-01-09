@@ -136,3 +136,5 @@ If the round just ended was the last one, then you will also get a message with 
 ```
 - state - the result of the game (can eiter be "win", "lose" or "draw")
 - score - on left is the score of the client receiving message
+
+After the game ends you may disconnect from the game endpoint and do a new ready check in the [lobby](../lobby/) to start another game.

@@ -1,18 +1,14 @@
 ## Description
-Service features 2 endpoints for auth functionality:
+Service features 3 endpoints for auth functionality:
 - /register
 - /login
-
-As well as a protected endpoint for testing purposes:
-- /protected_resource
-
-*protected_resource* endpoint requires a presence of a valid jwt token in the request. If the token is present and is valid, it will return a response with some success text. Else - 401 response.
+- /validate
 
 ## Usage examples:
 *in case you run the backend locally domain will be localhost*<br>
 *port is 3002 unless you've changed the compose file*<br><br>
 
-**First you need to create an account:**<br>
+### Registering
 POST<br>
 \<domain\>:\<port\>/register<br>
 <br>
@@ -22,7 +18,7 @@ Content-Type: application/json<br>
 Body:
 ```json
 {
-    "nickname": "the_dude",
+    "username": "the_dude",
     "password": "my_super_secure_password"
 }
 ```
@@ -30,16 +26,16 @@ Response should be:<br>
 201
 ```json
 {
-    "nickname": "the_dude",
-    "_id": "637251491bd848a9355cac3c",
-    "__v": 0,
-    "token": "abcdef1234.ghijklmnop5678.qrstuvwxyz901234"
+    "user": {
+        "username": "neterpila",
+        "_id": "63bc18627a91aed43b36675b",
+        "__v": 0
+    },
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2dpdGh1Yi5jb20vTmV0ZXJwaWxhL1JvY2tfcGFwZXJfc2Npc3NvcnNfYmFja2VuZCIsInN1YiI6InRoZV9kdWRlIiwiaWF0IjoxNjczMjcxMzk0fQ.SliSn5OPfNt4z7hly2z0i3LkWb8qfqwFa_iIjEN6sM4"
 }
 ```
 
-Then you need to store your token somewhere. You're gonna need it to access the protected resource.<br><br>
-
-**In case you lost your token (or it expired), you can login in order to issue a new one:**<br>
+### Logging in
 POST<br>
 \<domain\>:\<port\>/login<br>
 <br>
@@ -49,7 +45,7 @@ Content-Type: application/json<br>
 Body:
 ```json
 {
-    "nickname": "the_dude",
+    "username": "the_dude",
     "password": "my_super_secure_password"
 }
 ```
@@ -57,40 +53,35 @@ Response should be:<br>
 200
 ```json
 {
-    "nickname": "the_dude",
-    "_id": "637251491bd848a9355cac3c",
-    "__v": 0,
-    "token": "qwert0987.asdfghjk1234567.zxcvbnm345678"
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2dpdGh1Yi5jb20vTmV0ZXJwaWxhL1JvY2tfcGFwZXJfc2Npc3NvcnNfYmFja2VuZCIsInN1YiI6InRoZV9kdWRlIiwiaWF0IjoxNjczMjcxMzk0fQ.SliSn5OPfNt4z7hly2z0i3LkWb8qfqwFa_iIjEN6sM4"
 }
 ```
+Or:<br>
+401 - in case the credentials are not valid
 
-**When you have a token, you may access the protected endpoint:**<br>
+### Verifying the token (for internal use only)
 GET<br>
-\<domain\>:\<port\>/protected_resource<br>
+\<domain\>:\<port\>/validate?token=abc.123.qwe<br>
 <br>
-Headers:<br>
-Content-Type: application/json<br>
+Query params:
+- token - <your_token>
 <br>
-Now there are multiple ways of including the token in the request:
-1. Send it in request body:
+
+Responses:<br>
+200<br>
+Body:<br>
 ```json
 {
-    "token": "qwert0987.asdfghjk1234567.zxcvbnm345678"
+    "iss": "https://github.com/Neterpila/Rock_paper_scissors_backend",
+    "sub": "neterpila",
+    "iat": 1673271679
 }
 ```
-2. Send it as a query parameter:<br>
-\<domain\>:\<port\>/protected_resource?token=qwert0987.asdfghjk1234567.zxcvbnm345678<br>
-3. Send it as a request header:<br>
-x-access-token: qwert0987.asdfghjk1234567.zxcvbnm345678<br>
-or<br>
-Authorization: qwert0987.asdfghjk1234567.zxcvbnm345678<br><br>
-
-Response should be:<br>
-200
+Or:<br>
+400<br>
+Body:<br>
 ```json
 {
-    "message": "Welcome the_dude! You gained access to classified information."
+    "message": "Token is invalid"
 }
 ```
-
-If something is wrong with the token, you'll get 401.

@@ -81,8 +81,8 @@ GET http://localhost:3000/
 ### Important
 The port exposure must only be done in dev scenarios and for debug purposes.<br>
 In a prod scenario the backend services **MUST UNDER NO CIRCUMSTANCE** be available from the external network (exposed to the internet). The only services that are supposed to be available to the outside world are:
-- API_Gateway - serves the available API
-- SwaggerUI - documents the API_Gateway's HTTP endpoints and serves as a how-to instruction on using the API
+- API Gateway - serves the available API
+- SwaggerUI - documents the API Gateway's HTTP endpoints and serves as a how-to instruction on using the API
 - Grafana - for viewing metrics and logs; is protected by it's own auth
 
 Therefore, if you're a dev, you're running the backend on (for example) your own machine, and are in need of direct access to a certain service, you may just uncomment the "ports" section of the service in the compose file. By doing so you'll expose and forward a certain port on the host to a port of the app in a container.

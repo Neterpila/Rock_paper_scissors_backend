@@ -17,6 +17,7 @@
     "mongodb": "^4.5.0",
     "mongoose": "^6.3.1",
     "jwt-decode": "^3.1.2",
-    "express-ws": "^5.0.2"
+    "express-ws": "^5.0.2",
+    "axios": "^1.2.2"
   }
 }

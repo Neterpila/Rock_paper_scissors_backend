@@ -118,3 +118,6 @@ In case both users in the lobby are ready, the game is started. Both clients wil
 ```
 
 The clients should than take this game id and open a new connection to another WebSocket endpoint. You can find more info on how to connect and what to do an that endpoint [here](../game/).
+
+After the game starts the connection to the lobby is not closed and you can still chat in it for example (you'll have to handle that of the frontend though).<br>
+After the game ends you may disconnect from the game endpoint and do a new ready check here in the lobby to start another game.

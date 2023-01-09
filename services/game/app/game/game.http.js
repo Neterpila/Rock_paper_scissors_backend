@@ -10,7 +10,7 @@ async function create(req, res, next) {
 
     try {
 
-        return res.status(201).send(await gameService.create(req.body.roundLimit));
+        return res.status(201).send(await gameService.create(req.body.round_limit));
     } catch (e) {
         console.error("game | create:\n" + e.message || e);
         next(e);

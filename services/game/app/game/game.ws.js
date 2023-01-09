@@ -45,24 +45,19 @@ async function processClientMessage(connection, gameId, message, user) {
     try {
         message = JSON.parse(message);
     } catch (e) {};
-    if (message.action === "move")
-        await makeMove(connection, gameId, message.data, user);
+    if (message.action === "move" && message.data)
+        await makeMove(connection, gameId, message.data.move, user);
 }
 
 async function makeMove(connection, gameId, move, user) {
 
     if(await gameService.getCurrentRound(gameId) > await gameService.getRoundLimit(gameId)){
-        console.log("Game is Closed, Create New One");
-        connection.send(JSON.stringify({
-            action: "send",
-            user,
-            data: JSON.stringify({
-                event: "game_closed",
-            })
-        }));
+        //console.log("Game is Closed, Create New One");
         return connection.send(JSON.stringify({
             action: "close",
-            user
+            user,
+            status: 4002,
+            reason: "game " + gameId + " already ended"
         }));
     }
 
@@ -96,7 +91,7 @@ async function makeMove(connection, gameId, move, user) {
                 username: player.username
             },
             data: JSON.stringify({
-                event: "invalid_choice",
+                event: "invalid_move",
                 data: {
                     move: player.choice
                 }
@@ -212,43 +207,26 @@ async function makeMove(connection, gameId, move, user) {
             //TODO save gameHistory
             
             if(await gameService.getCurrentRound(gameId) >= await gameService.getRoundLimit(gameId)) {
-
-                
-
-                console.log("Game ended !");
-                if(winner.score === loser.score) {
-                    
-                    connection.send(JSON.stringify({
-                        action: "send",
-                        user: {
-                            username: loser.username
-                        },
-                        data: JSON.stringify({
-                            event: "game_ended",
-                            data: {
-                                state: "draw"
-                            }
-                        })
-                    }));
-
-                    connection.send(JSON.stringify({
-                        action: "send",
-                        user: {
-                            username: winner.username
-                        },
-                        data: JSON.stringify({
-                            event: "game_ended",
-                            data: {
-                                state: "draw"
-                            }
-                        })
-                    }));
-
-                    await gameService.endGame(gameId,"draw");
+                game_winner = winner.score > loser.score ? winner : loser;
+                game_loser = winner.username === game_winner.username ? loser : winner;
+                if (game_winner.score === game_loser.score) {
+                    [game_winner, game_loser].forEach(p => {
+                        connection.send(JSON.stringify({
+                            action: "send",
+                            user: {
+                                username: p.username
+                            },
+                            data: JSON.stringify({
+                                event: "game_ended",
+                                data: {
+                                    state: "draw",
+                                    score: `${p.score} : ${p.score}`
+                                }
+                            })
+                        }));
+                    });
+                    await gameService.endGame(gameId, "draw");
                 } else {
-                    game_winner = winner.score > loser.score ? winner : loser;
-                    game_loser = winner.username === game_winner.username ? loser : winner;
-
                     connection.send(JSON.stringify({
                         action: "send",
                         user: {
@@ -257,11 +235,11 @@ async function makeMove(connection, gameId, move, user) {
                         data: JSON.stringify({
                             event: "game_ended",
                             data: {
-                                state: "lost"
+                                state: "lose",
+                                score: `${game_loser.score} : ${game_winner.score}`
                             }
                         })
                     }));
-
                     connection.send(JSON.stringify({
                         action: "send",
                         user: {
@@ -270,7 +248,8 @@ async function makeMove(connection, gameId, move, user) {
                         data: JSON.stringify({
                             event: "game_ended",
                             data: {
-                                state: "won"
+                                state: "win",
+                                score: `${game_winner.score} : ${game_loser.score}`
                             }
                         })
                     }));
@@ -301,17 +280,13 @@ async function join_game(connection, id, user) {
     //Check if Game was played 
 
     if(await gameService.getCurrentRound(id) > await gameService.getRoundLimit(id)){
-        console.log("Game is Closed, Create New One");
-        connection.send(JSON.stringify({
-            action: "send",
-            user: {
-                username: player.username
-            },
-            data: JSON.stringify({
-                event: "GameClosed",
-            })
+        //console.log("Game is Closed, Create New One");
+        return connection.send(JSON.stringify({
+            action: "close",
+            user,
+            status: 4002,
+            reason: "game " + id + " already ended"
         }));
-        return await leave_game(connection, gameId, user);
     }
 
     try {

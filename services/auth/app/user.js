@@ -6,4 +6,6 @@ const User = new Schema ({
     password: { type: String }
 });
 
+User.index({ username: "text" });
+
 module.exports = mongoose.model("User", User);

@@ -57,5 +57,5 @@
             "requires_auth": false
         }
     ],
-    "backend_timeout": 1500
+    "backend_timeout": 10000
 }

@@ -28,7 +28,7 @@ async function findById(id) {
     try {
         
         let game = await Game.findById(id);
-        console.log(game);
+        //console.log(game);
         if (_.isEmpty(game))
             throw new Error();
         return game;
@@ -41,7 +41,7 @@ async function findById(id) {
 
 async function join(id, user) {
     let game = await findById(id);
-    console.log("Game id : " + game.id);
+    //console.log("Game id : " + game.id);
     if(game.users.some(u => u.username === user.username))
         return game;
 
@@ -93,6 +93,7 @@ async function addRound(id) {
     let game = await Game.findById(id);
     game.currentRound++;
     await game.save();
+    return game.currentRound;
 }
 
 async function saveChoiceAndMakeTurn(username,id,choice) {
@@ -120,6 +121,7 @@ async function endTurn(id,currRound,winnerOfRound) {
 async function endGame(id,theWinnerOfGame) {
     let game = await Game.findById(id);
     game.winnerOfGame = theWinnerOfGame.username || theWinnerOfGame;
+    game.ended = true;
     game.save();
 }
 

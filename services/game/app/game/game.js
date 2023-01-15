@@ -5,6 +5,7 @@ const Game = new Schema ({
     
     roundLimit : {type: Number, default: 10},
     currentRound: {type: Number , default: 1},
+    ended: { type: Boolean, default: false },
     users: [ {
         username: { type: String },
         yourTurn: { type: Boolean, default: true },

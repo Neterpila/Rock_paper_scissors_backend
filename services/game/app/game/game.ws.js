@@ -3,6 +3,7 @@ const expressWs = require('express-ws')(express);
 const router = express.Router();
 const gameService = require('./game.service');
 const _ = require('lodash');
+const game = require('./game');
 const debug_log = process.env.DEBUG_LOG === "true";
 
 gameService.clearConnectedUsers();
@@ -50,8 +51,7 @@ async function processClientMessage(connection, gameId, message, user) {
 }
 
 async function makeMove(connection, gameId, move, user) {
-
-    if(await gameService.getCurrentRound(gameId) > await gameService.getRoundLimit(gameId)){
+    if ((await gameService.findById(gameId)).ended){
         //console.log("Game is Closed, Create New One");
         return connection.send(JSON.stringify({
             action: "close",
@@ -61,47 +61,22 @@ async function makeMove(connection, gameId, move, user) {
         }));
     }
 
-
-    playerUsername = user.username
-    let connected_users = await gameService.getConnectedUsers(gameId);
-    let player = connected_users.filter(player => {
-        return player.username === playerUsername
-    })[0];
-    let opponent = _.filter(connected_users, function(u) { 
-        if (u.username != playerUsername) return u; 
-     })[0];
-
-    if (!opponent) {
-        return connection.send(JSON.stringify({
+    if (!(await gameService.validateChoice(move))) {
+        //console.log("UNVALID CHOISE!!");
+        connection.send(JSON.stringify({
             action: "send",
             user,
             data: JSON.stringify({
-                event: "opponent_missing",
-                message: "Opponent has not yet joined the game, please wait"
-            })
-        }));
-    }
-
-    choiceValid = await gameService.validateChoice(move);
-    if( !choiceValid ) {
-        console.log("UNVALID CHOISE!!");
-        connection.send(JSON.stringify({
-            action: "send",
-            user: {
-                username: player.username
-            },
-            data: JSON.stringify({
-                event: "invalid_move",
-                data: {
-                    move: player.choice
-                }
+                event: "invalid_move"
             })
         }));
         return;
     }
 
-    if(player.yourTurn === false) {
-        connection.send(JSON.stringify({
+    let player = _.find((await gameService.getConnectedUsers(gameId)), u => u.username === user.username);
+
+    if (player.yourTurn === false) {
+        return connection.send(JSON.stringify({
             action: "send",
             user: {
                 username: player.username
@@ -113,153 +88,26 @@ async function makeMove(connection, gameId, move, user) {
                 }
             })
         }));
-        return;
     }
+
+    player = await gameService.saveChoiceAndMakeTurn(player.username, gameId, move);
     
-    console.log("choice is " + move);
-    
-    player = await gameService.saveChoiceAndMakeTurn(player.username,gameId,move);
+    //console.log("choice is " + move);
 
-    currRound = await gameService.getCurrentRound(gameId);
+    let opponent = _.find((await gameService.getConnectedUsers(gameId)), u => u.username != player.username);
+    /*if (!opponent) {
+        return connection.send(JSON.stringify({
+            action: "send",
+            user,
+            data: JSON.stringify({
+                event: "opponent_missing",
+                message: "Opponent has not yet joined the game, please wait"
+            })
+        }));
+    }*/
 
-
-    if (opponent.choice !== "") {
-        let winner = null;
-        if (player.choice === "paper" && opponent.choice === "rock") winner = player;
-        if (player.choice === "paper" && opponent.choice === "scissors") winner = opponent;
-        if (player.choice === "rock" && opponent.choice === "paper") winner = opponent;
-        if (player.choice === "rock" && opponent.choice === "scissors") winner = player;
-        if (player.choice === "scissors" && opponent.choice === "paper") winner = player;
-        if (player.choice === "scissors" && opponent.choice === "rock") winner = opponent;
-        if (winner === null) {
-
-            connection.send(JSON.stringify({
-                action: "send",
-                user: {
-                    username: player.username
-                },
-                data: JSON.stringify({
-                    event: "round_ended",
-                    data: {
-                        state: "draw",
-                        opponent_move: opponent.choice,
-                        score: player.score + " : " + opponent.score,
-                        current_round: currRound
-                    }
-                })
-            }));
-            connection.send(JSON.stringify({
-                action: "send",
-                user: {
-                    username: opponent.username
-                },
-                data: JSON.stringify({
-                    event: "round_ended",
-                    data: {
-                        state: "draw",
-                        opponent_move: player.choice,
-                        score: player.score + " : " + opponent.score,
-                        current_round: currRound
-                    }
-                })
-            }));
-            
-            gameService.endTurn(gameId,currRound);
-            gameService.addRound(gameId);
-        } else {
-            winner = await gameService.addPoint(gameId,winner.username);
-            let loser = winner.username === player.username ? opponent : player;
-
-            gameService.endTurn(gameId,currRound,winner);
-
-            connection.send(JSON.stringify({
-                action: "send",
-                user: {
-                    username: winner.username
-                },
-                data: JSON.stringify({
-                    event: "round_ended",
-                    data: {
-                        state: "win",
-                        opponent_move: loser.choice,
-                        score: winner.score + " : " + loser.score,
-                        current_round: currRound
-                    }
-                })
-            }));
-            
-            connection.send(JSON.stringify({
-                action: "send",
-                user: {
-                    username: loser.username
-                },
-                data: JSON.stringify({
-                    event: "round_ended",
-                    data: {
-                        state: "lose",
-                        opponent_move: winner.choice,
-                        score: loser.score + " : " + winner.score,
-                        current_round: currRound
-                    }
-                })
-            }));
-            //TODO check if gameEnded 
-            //TODO save gameHistory
-            
-            if(await gameService.getCurrentRound(gameId) >= await gameService.getRoundLimit(gameId)) {
-                game_winner = winner.score > loser.score ? winner : loser;
-                game_loser = winner.username === game_winner.username ? loser : winner;
-                if (game_winner.score === game_loser.score) {
-                    [game_winner, game_loser].forEach(p => {
-                        connection.send(JSON.stringify({
-                            action: "send",
-                            user: {
-                                username: p.username
-                            },
-                            data: JSON.stringify({
-                                event: "game_ended",
-                                data: {
-                                    state: "draw",
-                                    score: `${p.score} : ${p.score}`
-                                }
-                            })
-                        }));
-                    });
-                    await gameService.endGame(gameId, "draw");
-                } else {
-                    connection.send(JSON.stringify({
-                        action: "send",
-                        user: {
-                            username: game_loser.username
-                        },
-                        data: JSON.stringify({
-                            event: "game_ended",
-                            data: {
-                                state: "lose",
-                                score: `${game_loser.score} : ${game_winner.score}`
-                            }
-                        })
-                    }));
-                    connection.send(JSON.stringify({
-                        action: "send",
-                        user: {
-                            username: game_winner.username
-                        },
-                        data: JSON.stringify({
-                            event: "game_ended",
-                            data: {
-                                state: "win",
-                                score: `${game_winner.score} : ${game_loser.score}`
-                            }
-                        })
-                    }));
-                    await gameService.endGame(gameId,game_winner);
-                }
-            }
-            gameService.addRound(gameId);
-        } 
-    } else {
-        connection.send(JSON.stringify({
+    if (!opponent || !opponent.choice)
+        return connection.send(JSON.stringify({
             action: "send",
             user: {
                 username: player.username
@@ -271,7 +119,146 @@ async function makeMove(connection, gameId, move, user) {
                 }
             })
         }));
-        return;
+
+    let currRound = await gameService.getCurrentRound(gameId);
+    
+    let winner = null;
+    if (player.choice === "paper" && opponent.choice === "rock") winner = player;
+    if (player.choice === "paper" && opponent.choice === "scissors") winner = opponent;
+    if (player.choice === "rock" && opponent.choice === "paper") winner = opponent;
+    if (player.choice === "rock" && opponent.choice === "scissors") winner = player;
+    if (player.choice === "scissors" && opponent.choice === "paper") winner = player;
+    if (player.choice === "scissors" && opponent.choice === "rock") winner = opponent;
+
+    if (winner === null) {
+        gameService.endTurn(gameId,currRound);
+
+        connection.send(JSON.stringify({
+            action: "send",
+            user: {
+                username: player.username
+            },
+            data: JSON.stringify({
+                event: "round_ended",
+                data: {
+                    state: "draw",
+                    opponent_move: opponent.choice,
+                    score: player.score + " : " + opponent.score,
+                    current_round: currRound
+                }
+            })
+        }));
+        connection.send(JSON.stringify({
+            action: "send",
+            user: {
+                username: opponent.username
+            },
+            data: JSON.stringify({
+                event: "round_ended",
+                data: {
+                    state: "draw",
+                    opponent_move: player.choice,
+                    score: player.score + " : " + opponent.score,
+                    current_round: currRound
+                }
+            })
+        }));
+    } else {
+        winner = await gameService.addPoint(gameId,winner.username);
+        let loser = winner.username === player.username ? opponent : player;
+
+        gameService.endTurn(gameId,currRound,winner);
+
+        connection.send(JSON.stringify({
+            action: "send",
+            user: {
+                username: winner.username
+            },
+            data: JSON.stringify({
+                event: "round_ended",
+                data: {
+                    state: "win",
+                    opponent_move: loser.choice,
+                    score: winner.score + " : " + loser.score,
+                    current_round: currRound
+                }
+            })
+        }));
+        connection.send(JSON.stringify({
+            action: "send",
+            user: {
+                username: loser.username
+            },
+            data: JSON.stringify({
+                event: "round_ended",
+                data: {
+                    state: "lose",
+                    opponent_move: winner.choice,
+                    score: loser.score + " : " + winner.score,
+                    current_round: currRound
+                }
+            })
+        }));
+    }
+
+    //console.log("pre end: " + currRound + "/" + (await gameService.getRoundLimit(gameId)));
+
+    // if game not yet ended - inc round 
+    if (currRound < await gameService.getRoundLimit(gameId))
+        return await gameService.addRound(gameId);
+
+    // game ended, send results
+    // console.log("game ended");
+    connected_users = await gameService.getConnectedUsers(gameId);
+    connected_users = _.sortBy(connected_users, user => user.score);
+    let game_winner = connected_users[1];
+    let game_loser = connected_users[0];
+
+    if (game_winner.score === game_loser.score) {
+        [game_winner, game_loser].forEach(p => {
+            connection.send(JSON.stringify({
+                action: "send",
+                user: {
+                    username: p.username
+                },
+                data: JSON.stringify({
+                    event: "game_ended",
+                    data: {
+                        state: "draw",
+                        score: `${p.score} : ${p.score}`
+                    }
+                })
+            }));
+        });
+        await gameService.endGame(gameId, "draw");
+    } else {
+        connection.send(JSON.stringify({
+            action: "send",
+            user: {
+                username: game_loser.username
+            },
+            data: JSON.stringify({
+                event: "game_ended",
+                data: {
+                    state: "lose",
+                    score: `${game_loser.score} : ${game_winner.score}`
+                }
+            })
+        }));
+        connection.send(JSON.stringify({
+            action: "send",
+            user: {
+                username: game_winner.username
+            },
+            data: JSON.stringify({
+                event: "game_ended",
+                data: {
+                    state: "win",
+                    score: `${game_winner.score} : ${game_loser.score}`
+                }
+            })
+        }));
+        await gameService.endGame(gameId, game_winner);
     }
 };
 

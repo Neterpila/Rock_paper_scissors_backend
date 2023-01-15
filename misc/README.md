@@ -3,11 +3,11 @@
 2. ~~**Contenerization**~~
 3. ~~**Security enforcement and testing**~~ - User authorization with JWT, manual Postman tests 
 4. ~~**Performance tracking and monitoring**~~ - [look here](https://github.com/Neterpila/Rock_paper_scissors_backend#monitoring)
-5. Performance, resilliency and end2end tests
+5. ~~Performance, resilliency and end2end tests~~ - There is a test plan for JMeter with different kinds of tests
 6. Chaos testing
-7. **Container orchestration and scalability** - todo: transition from compose to swarm​
-8. ~~**Log processing, auditing and alerting**~~ - logs are collected to Loki, Grafana has an example alert
-9. **Discoverability and runtime reconfiguration**
+7. Container orchestration and scalability - todo: transition from compose to swarm​
+8. ~~Log processing, auditing and alerting~~ - logs are collected to Loki, Grafana has an example alert
+9. Discoverability and runtime reconfiguration
 10. Stream and batch data processing
  
 ## Checklist
@@ -21,4 +21,4 @@
 - ~~Add prometheus, grafana, cadvisor​~~
 - Transition from compose to swarm​
 - ~~Collect logs to splunk/elastic~~
-- Research and add either discoverability services or performance tests in postman (or both)
+- ~~Research and add either discoverability services or performance tests in postman (or both)~~

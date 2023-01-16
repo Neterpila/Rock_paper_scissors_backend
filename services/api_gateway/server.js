@@ -4,10 +4,20 @@ const jwt_validator = require("./app/auth/jwt_validator");
 const bodyParser = require('body-parser');
 const cors = require('cors');
 
+function getQueryParameter(name, url) {
+    name = name.replace(/[\[\]]/g, '\\$&');
+    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+        results = regex.exec(url);
+    if (!results) return null;
+    if (!results[2]) return '';
+    return decodeURIComponent(results[2].replace(/\+/g, ' '));
+}
+
 require('express-ws')(app, null, {
     wsOptions: { 
         verifyClient: ({ req }, done) => {
-            jwt_validator(req.headers.authorization).then(payload => {
+            let token = req.headers.authorization || getQueryParameter("token", req.url);
+            jwt_validator(token).then(payload => {
                 req.user = payload;
                 return done(true);
             }).catch(e => {

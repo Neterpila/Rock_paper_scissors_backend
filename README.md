@@ -102,6 +102,35 @@ Compose services also have configured profiles, which means that not all service
 `docker compose --profile swagger up` apart from core services will also run SwaggerUI.<br>
 `docker compose --profile monitoring --profile swagger up` will run everything there is.
 
+### Docker Swarm
+There is an option of running the backend as a stack in a docker swarm. For this you may use [this compose file](./docker-deploy.yml). It has a few differences to an already existing compose file due to some swarm specifics.
+
+To initialize a swarm:<br>
+`docker swarm init --advertise-addr <your ip>`<br>
+--advertise-addr option may or may not be necessary in your case.
+
+If you wish to create a multi-node swarm, you'll need to join other hosts to your swarm using a token obtained in a previous step:<br>
+`docker swarm join --token <your token> <address>`
+
+Then create user-defined overlay networks:<br>
+`docker network create -d overlay rps_ext`<br>
+`docker network create -d overlay --internal rps_int`
+
+Then to deploy a stack in project directory run:<br>
+`env $(cat .env) docker stack deploy -c ./docker-deploy.yml rps`<br>
+you may use a differnt stack name if you wish.
+
+#### Notes 
+Using two machines in the same local home network, one with MacOS, another with Win10 and Docker for Desktop [I](https://github.com/Neterpila) wasn't able to join them into a single swarm. Apparently, judging from the forum/blog posts, open issues and complaints from other users, this is a Docker problem. Swarm isn't well supported on MacOS and Windows and Docker itself in its tutorials recommends using Linux machines for establishing multi-node swarms. From what I've read it is required for at least the manager node to be a Linux machine.
+
+Another issue you may run into is that after depolying a stack everything seems to be fine, however you cannot access your services by e.g. HTTP by requesting 'localhost:\<port\>', even though the services have their ports published (and everything also works fine in compose mode). I've run into this as well using a MacOS machine. I wasn't able to solve this and assume it is yet another swarm issue with non-Linux OS.
+
+Long story short, if you want to work with docker swarm on your PC without annoying troubles - you need to have a Linux as your OS. Otherwise, for dev purposes consider using the compose mode. As for production solution - you definetely need a server with some Linux distro.
+
+### Hub
+The project specific service images live here:<br>
+https://hub.docker.com/repositories/neterpila
+
 
 ## How to contribute?
 1. Create a branch for a feature you want to add

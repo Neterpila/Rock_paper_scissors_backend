@@ -28,6 +28,9 @@ Technologies:
 - Grafana - a tool for visualizing the collected metrics
 - Flutter - a set of tools designed to create native applications for various platforms (frontend app)
 
+## Link to frontend
+Frontend is realized in Svelte Component Framework  : 
+https://github.com/konanik15/Rock_paper_scissors_frontend
 
 ## API
 To view http endpoints available to the frontend please visit Swagger.<br>
